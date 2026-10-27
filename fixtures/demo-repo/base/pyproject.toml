@@ -1,0 +1,13 @@
+[project]
+name = "invoicing"
+version = "0.3.0"
+description = "Invoice totals, discounts and proration for a small billing service."
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
