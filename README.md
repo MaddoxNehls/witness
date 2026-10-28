@@ -8,6 +8,19 @@ over recall**. Every finding it reports comes with evidence produced by executio
 that fails on the change and passes without it, run in an isolated sandbox. A hypothesis
 that cannot be reproduced is dropped, however convincing it sounds.
 
+**On 10 real open-source PRs** (5 that reintroduce a known bug, 5 labelled clean), the
+same model's hypotheses were reported with and without the verification step:
+
+| | Precision | Recall | Clean PRs flagged |
+| --- | ---: | ---: | ---: |
+| Witness (only verified findings) | **80%** | 100% | **2 / 5** |
+| Same hypotheses, unverified | 67% | 100% | 3 / 5 |
+
+Verification dropped 3 hypotheses it could not reproduce, all on clean PRs, without
+losing a real bug. One remaining "false positive" on a clean PR turned out to be a real
+bug that upstream fixed later, on the same line. The sample is small; the [results section](#results-a-small-real-run-10-prs)
+has the caveats and the raw recordings.
+
 > Status: milestones 1-4 are code-complete. The CLI, hardened Docker sandbox (pytest and
 > vitest), GitHub App (webhook, Postgres queue, worker, check runs, inline reviews) and the
 > eval harness with a 55-case benchmark are done. The App is not registered or deployed
