@@ -1,0 +1,21 @@
+# Review history and the job queue for the GitHub App.
+# Host port 5449: 5432-5448 are used by other local projects.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: witness
+      POSTGRES_PASSWORD: witness
+      POSTGRES_DB: witness
+    ports:
+      - "5449:5432"
+    volumes:
+      - witness-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U witness -d witness"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  witness-postgres:

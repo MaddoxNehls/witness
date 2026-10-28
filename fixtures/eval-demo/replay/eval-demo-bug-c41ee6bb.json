@@ -1,0 +1,38 @@
+{
+  "model": "claude-opus-5-5",
+  "responses": {
+    "hypothesize": {
+      "candidates": [
+        {
+          "id": "C1",
+          "claim": "apply_discount now does the arithmetic in binary floats and rounds with round(), which is round-half-even on an inexact value. Half-cent results no longer round half-up as to_money does, so invoices can be a cent short.",
+          "file": "src/invoicing/money.py",
+          "line_start": 20,
+          "line_end": 21,
+          "trigger": "apply_discount(Decimal('1.15'), 50): exact result 0.575 should round half-up to 0.58",
+          "severity": "high",
+          "confidence": 0.86
+        }
+      ]
+    },
+    "prove/C1/attempt-1": {
+      "reasoning": "The import failed: apply_discount lives in invoicing.money, not invoicing.pricing. Same assertion with the correct import.",
+      "concede": false,
+      "test_code": "from decimal import Decimal\n\nfrom invoicing.money import apply_discount\n\n\ndef test_half_cent_discount_rounds_half_up() -> None:\n    # 1.15 * 50% = 0.575 exactly, which rounds half-up to 0.58 like every other amount.\n    assert apply_discount(Decimal(\"1.15\"), 50) == Decimal(\"0.58\")\n",
+      "expected_failure": {
+        "kind": "assertion",
+        "exception_type": null
+      }
+    },
+    "fix/C1": {
+      "explanation": "Keep the arithmetic in Decimal and round with to_money. Converting the percentage through str() keeps a float such as 12.5 at its printed value instead of its binary approximation.",
+      "edits": [
+        {
+          "file": "src/invoicing/money.py",
+          "find": "    discounted = float(amount) * (1 - float(percent) / 100)\n    return Decimal(str(round(discounted, 2)))\n",
+          "replace": "    factor = (Decimal(100) - Decimal(str(percent))) / Decimal(100)\n    return to_money(amount * factor)\n"
+        }
+      ]
+    }
+  }
+}

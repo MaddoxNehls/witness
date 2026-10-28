@@ -94,6 +94,14 @@ class TestReplay:
         RecordingBackend(live, path).complete(REQUEST)
         assert ReplayBackend(path).complete(REQUEST).text == json.dumps(VALID_REPLY)
 
+    def test_recording_is_cache_through(self, tmp_path: Path) -> None:
+        path = tmp_path / "recorded.json"
+        first = RecordingBackend(ReplayBackend({"responses": {REQUEST.tag: VALID_REPLY}}), path)
+        first.complete(REQUEST)
+        resumed = RecordingBackend(ReplayBackend({"responses": {}}), path)  # live side is empty
+        assert resumed.complete(REQUEST).text == json.dumps(VALID_REPLY)
+        assert (first.live_calls, resumed.live_calls) == (1, 0)
+
     def test_create_backend_requires_fixtures(self) -> None:
         with pytest.raises(ValueError, match="--fixtures"):
             create_backend("replay")
@@ -177,7 +185,11 @@ class TestClaudeCli:
         seen: list[dict[str, Any]] = []
 
         def runner(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
-            seen.append({"command": command, **kwargs})
+            option = "--system-prompt-file"
+            system = (
+                Path(command[command.index(option) + 1]).read_text() if option in command else None
+            )
+            seen.append({"command": command, "system": system, **kwargs})
             return subprocess.CompletedProcess(command, returncode, stdout, "boom")
 
         # Any real executable satisfies the PATH lookup; the runner never launches it.
@@ -197,7 +209,9 @@ class TestClaudeCli:
         [call] = seen
         assert call["command"][1:4] == ["-p", "--output-format", "json"]
         assert "hello" in call["input"]
-        assert "be precise" in call["input"]
+        assert call["system"] == "be precise"  # replaces Claude Code's own system prompt
+        assert "be precise" not in call["input"]
+        assert call["command"][-3:] == ["--setting-sources", "", "--strict-mcp-config"]
         assert all("hello" not in part for part in call["command"])
         assert (completion.text, completion.model) == ('{"ok": true}', "claude-opus-5-5")
         assert (completion.input_tokens, completion.cost_usd) == (103, 0.02)

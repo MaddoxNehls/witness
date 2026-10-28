@@ -1,0 +1,1411 @@
+{
+  "version": 1,
+  "description": "Real bug fixes reverted into PRs (bug) and refactor/feature commits (clean).",
+  "cases": [
+    {
+      "id": "humanize-bug-08cf2c30",
+      "kind": "bug",
+      "repo": "https://github.com/python-humanize/humanize",
+      "license": "MIT",
+      "language": "python",
+      "commit": "08cf2c3026cfd7c553e397e1d91ea069eb2a4978",
+      "parent": "e1a5c7c9efe9f82edc89a2df8c2b599516a87dcb",
+      "message": "Fix fractional() emitting degenerate output when the fraction rounds to a whole (#354)",
+      "source_files": [
+        "src/humanize/number.py"
+      ],
+      "test_files": [
+        "tests/test_number.py"
+      ],
+      "hidden_tests": [
+        "tests/test_number.py"
+      ],
+      "hunks": [
+        {
+          "file": "src/humanize/number.py",
+          "start": 364,
+          "end": 367
+        }
+      ]
+    },
+    {
+      "id": "humanize-bug-392aef70",
+      "kind": "bug",
+      "repo": "https://github.com/python-humanize/humanize",
+      "license": "MIT",
+      "language": "python",
+      "commit": "392aef707c0e74341ab4a51420984e9ea6b566c5",
+      "parent": "ca892b368a535a79cc5e2181d052245b94fd6652",
+      "message": "Fix `naturaldelta` truncating years instead of rounding (#295)",
+      "source_files": [
+        "src/humanize/time.py"
+      ],
+      "test_files": [
+        "tests/test_time.py"
+      ],
+      "hidden_tests": [
+        "tests/test_time.py"
+      ],
+      "hunks": [
+        {
+          "file": "src/humanize/time.py",
+          "start": 258,
+          "end": 258
+        }
+      ]
+    },
+    {
+      "id": "humanize-bug-823ad609",
+      "kind": "bug",
+      "repo": "https://github.com/python-humanize/humanize",
+      "license": "MIT",
+      "language": "python",
+      "commit": "823ad6096e1e5ba82ea876ce761fc2efebd76157",
+      "parent": "7574e0cc377d80db0d2756fc2c5e0b8799a6f8b4",
+      "message": "Fix `naturalsize()` rounding rollover at unit boundaries (#329)",
+      "source_files": [
+        "src/humanize/filesize.py"
+      ],
+      "test_files": [
+        "tests/test_filesize.py"
+      ],
+      "hidden_tests": [
+        "tests/test_filesize.py"
+      ],
+      "hunks": [
+        {
+          "file": "src/humanize/filesize.py",
+          "start": 99,
+          "end": 99
+        }
+      ]
+    },
+    {
+      "id": "humanize-bug-984526c0",
+      "kind": "bug",
+      "repo": "https://github.com/python-humanize/humanize",
+      "license": "MIT",
+      "language": "python",
+      "commit": "984526c02448110a8392dde3f5e26096dfd7c729",
+      "parent": "14965a74953eb5119859975e7c452a04b481cdae",
+      "message": "Fix intcomma overflow for large Python integers (#392)",
+      "source_files": [
+        "src/humanize/number.py"
+      ],
+      "test_files": [
+        "tests/test_number.py"
+      ],
+      "hidden_tests": [
+        "tests/test_number.py"
+      ],
+      "hunks": [
+        {
+          "file": "src/humanize/number.py",
+          "start": 163,
+          "end": 163
+        }
+      ]
+    },
+    {
+      "id": "humanize-bug-e46732ed",
+      "kind": "bug",
+      "repo": "https://github.com/python-humanize/humanize",
+      "license": "MIT",
+      "language": "python",
+      "commit": "e46732ed235019682b7bfc6c44443e247b332e95",
+      "parent": "984526c02448110a8392dde3f5e26096dfd7c729",
+      "message": "Fix `metric()` showing an extra significant digit on rounding carry (#359)",
+      "source_files": [
+        "src/humanize/number.py"
+      ],
+      "test_files": [
+        "tests/test_number.py"
+      ],
+      "hidden_tests": [
+        "tests/test_number.py"
+      ],
+      "hunks": [
+        {
+          "file": "src/humanize/number.py",
+          "start": 553,
+          "end": 554
+        }
+      ]
+    },
+    {
+      "id": "marshmallow-bug-070dde08",
+      "kind": "bug",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "070dde08bad456e743a0d2e1842c142a799a9568",
+      "parent": "fea5428567960f15be0c9a3a4b99c0d9bb63848c",
+      "message": "Fix Constant field with required=True raising ValueError (#2901)",
+      "source_files": [
+        "src/marshmallow/fields.py"
+      ],
+      "test_files": [
+        "tests/test_deserialization.py"
+      ],
+      "hidden_tests": [
+        "tests/test_deserialization.py"
+      ],
+      "hunks": [
+        {
+          "file": "src/marshmallow/fields.py",
+          "start": 2077,
+          "end": 2078
+        },
+        {
+          "file": "src/marshmallow/fields.py",
+          "start": 2080,
+          "end": 2080
+        }
+      ]
+    },
+    {
+      "id": "marshmallow-bug-19ca8dce",
+      "kind": "bug",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "19ca8dce2d5bde94509a4a89e495f35c695442d5",
+      "parent": "213ee3a020e24fb26ead3a2285ba0402c90080ce",
+      "message": "Fix Constant field rejecting None values during load (#2894)",
+      "source_files": [
+        "src/marshmallow/fields.py"
+      ],
+      "test_files": [
+        "tests/test_deserialization.py"
+      ],
+      "hidden_tests": [
+        "tests/test_deserialization.py"
+      ],
+      "hunks": [
+        {
+          "file": "src/marshmallow/fields.py",
+          "start": 2067,
+          "end": 2067
+        },
+        {
+          "file": "src/marshmallow/fields.py",
+          "start": 2070,
+          "end": 2071
+        }
+      ]
+    },
+    {
+      "id": "marshmallow-bug-252090c7",
+      "kind": "bug",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "252090c7c707166cf4fcfcdc73eb4376b7bbc4b7",
+      "parent": "65374df0c31cdc45acc4435741779298201306a2",
+      "message": "Fix nested partial to use attr_name instead of data_key for prefix (#2903)",
+      "source_files": [
+        "src/marshmallow/schema.py"
+      ],
+      "test_files": [
+        "tests/test_deserialization.py"
+      ],
+      "hidden_tests": [
+        "tests/test_deserialization.py"
+      ],
+      "hunks": [
+        {
+          "file": "src/marshmallow/schema.py",
+          "start": 657,
+          "end": 657
+        }
+      ]
+    },
+    {
+      "id": "marshmallow-bug-5761beab",
+      "kind": "bug",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "5761beab3985d654d712f9326e08bfb2e2ec9c4c",
+      "parent": "d08471b17880c62b789971ada638707a11d3f8d4",
+      "message": "Fix Pluck handling of empty data_key",
+      "source_files": [
+        "src/marshmallow/fields.py"
+      ],
+      "test_files": [
+        "tests/test_fields.py"
+      ],
+      "hidden_tests": [
+        "tests/test_fields.py"
+      ],
+      "hunks": [
+        {
+          "file": "src/marshmallow/fields.py",
+          "start": 713,
+          "end": 713
+        }
+      ]
+    },
+    {
+      "id": "marshmallow-bug-65374df0",
+      "kind": "bug",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "65374df0c31cdc45acc4435741779298201306a2",
+      "parent": "070dde08bad456e743a0d2e1842c142a799a9568",
+      "message": "Fix OneOf.options() emitting phantom entries when labels outnumber choices (#2909)",
+      "source_files": [
+        "src/marshmallow/validate.py"
+      ],
+      "test_files": [
+        "tests/test_validate.py"
+      ],
+      "hidden_tests": [
+        "tests/test_validate.py"
+      ],
+      "hunks": [
+        {
+          "file": "src/marshmallow/validate.py",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "file": "src/marshmallow/validate.py",
+          "start": 629,
+          "end": 629
+        },
+        {
+          "file": "src/marshmallow/validate.py",
+          "start": 631,
+          "end": 631
+        }
+      ]
+    },
+    {
+      "id": "more-itertools-bug-073d2342",
+      "kind": "bug",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "073d23421b60e05a99872e7b174902f4aa151f31",
+      "parent": "b110a77364ec0ed5bb06194b591f97a54591dbc9",
+      "message": "Fix support for iterators using \"repeat\"",
+      "source_files": [
+        "more_itertools/more.py"
+      ],
+      "test_files": [
+        "tests/test_more.py"
+      ],
+      "hidden_tests": [
+        "tests/test_more.py"
+      ],
+      "hunks": [
+        {
+          "file": "more_itertools/more.py",
+          "start": 4201,
+          "end": 4201
+        },
+        {
+          "file": "more_itertools/more.py",
+          "start": 4365,
+          "end": 4365
+        }
+      ]
+    },
+    {
+      "id": "more-itertools-bug-6b1907de",
+      "kind": "bug",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "6b1907de293a655fb77881bf81948f95fd15bd7c",
+      "parent": "ca711220a6657a22655f6fa497524d006a735c5f",
+      "message": "fix: seekable.peek/bool no longer drop items when maxlen is 0",
+      "source_files": [
+        "more_itertools/more.py"
+      ],
+      "test_files": [
+        "tests/test_more.py"
+      ],
+      "hidden_tests": [
+        "tests/test_more.py"
+      ],
+      "hunks": [
+        {
+          "file": "more_itertools/more.py",
+          "start": 3133,
+          "end": 3133
+        }
+      ]
+    },
+    {
+      "id": "more-itertools-bug-b0aa91ef",
+      "kind": "bug",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "b0aa91efbb452eeb8ffa0447047519c6e84d5292",
+      "parent": "073d23421b60e05a99872e7b174902f4aa151f31",
+      "message": "Fix random_product() as well",
+      "source_files": [
+        "more_itertools/recipes.py"
+      ],
+      "test_files": [
+        "tests/test_recipes.py"
+      ],
+      "hidden_tests": [
+        "tests/test_recipes.py"
+      ],
+      "hunks": [
+        {
+          "file": "more_itertools/recipes.py",
+          "start": 583,
+          "end": 583
+        }
+      ]
+    },
+    {
+      "id": "more-itertools-bug-d992be0d",
+      "kind": "bug",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "d992be0de9383ddcaae3a24866a2d96b52132b07",
+      "parent": "cb75bb9c55f7ed3e77ce599097e1ba8da411746d",
+      "message": "Fix stability in running_min and running_max",
+      "source_files": [
+        "more_itertools/recipes.py"
+      ],
+      "test_files": [
+        "tests/test_more.py"
+      ],
+      "hidden_tests": [
+        "tests/test_more.py"
+      ],
+      "hunks": [
+        {
+          "file": "more_itertools/recipes.py",
+          "start": 1474,
+          "end": 1474
+        },
+        {
+          "file": "more_itertools/recipes.py",
+          "start": 1476,
+          "end": 1481
+        },
+        {
+          "file": "more_itertools/recipes.py",
+          "start": 1515,
+          "end": 1515
+        },
+        {
+          "file": "more_itertools/recipes.py",
+          "start": 1517,
+          "end": 1522
+        }
+      ]
+    },
+    {
+      "id": "more-itertools-bug-edb3346f",
+      "kind": "bug",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "edb3346f835ca917efbfda5e2d6664ab952da369",
+      "parent": "247e15b3a489d5805375c95dfa79486c9bd0eb1b",
+      "message": "Fix empty ranges in numeric_range.__reversed__",
+      "source_files": [
+        "more_itertools/more.py"
+      ],
+      "test_files": [
+        "tests/test_more.py"
+      ],
+      "hidden_tests": [
+        "tests/test_more.py"
+      ],
+      "hunks": [
+        {
+          "file": "more_itertools/more.py",
+          "start": 2404,
+          "end": 2404
+        },
+        {
+          "file": "more_itertools/more.py",
+          "start": 2406,
+          "end": 2408
+        }
+      ]
+    },
+    {
+      "id": "more-itertools-bug-f51a53bf",
+      "kind": "bug",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "f51a53bfd2fe9504063a33ef5f4a73e30d82d0e2",
+      "parent": "5d946b3590bfe92f1465c1b9b9830dd434745c84",
+      "message": "fix: handle empty interleave_evenly input",
+      "source_files": [
+        "more_itertools/more.py"
+      ],
+      "test_files": [
+        "tests/test_more.py"
+      ],
+      "hidden_tests": [
+        "tests/test_more.py"
+      ],
+      "hunks": [
+        {
+          "file": "more_itertools/more.py",
+          "start": 1340,
+          "end": 1340
+        }
+      ]
+    },
+    {
+      "id": "pathe-bug-4bcf68fd",
+      "kind": "bug",
+      "repo": "https://github.com/unjs/pathe",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "4bcf68fd27f505ea9af53d5fd8af8ec703e5ef40",
+      "parent": "71588662c03b07e00c5bc091d20e52ddc7b6c7e9",
+      "message": "fix(parse)!: fix root handling to be consistent with node (#194)",
+      "source_files": [
+        "src/path.ts"
+      ],
+      "test_files": [
+        "test/index.spec.ts"
+      ],
+      "hidden_tests": [
+        "test/index.spec.ts"
+      ],
+      "hunks": [
+        {
+          "file": "src/path.ts",
+          "start": 17,
+          "end": 17
+        },
+        {
+          "file": "src/path.ts",
+          "start": 272,
+          "end": 272
+        }
+      ]
+    },
+    {
+      "id": "pathe-bug-b91e344e",
+      "kind": "bug",
+      "repo": "https://github.com/unjs/pathe",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "b91e344e39e9b1dfb366d8e8222bc2471a885440",
+      "parent": "0888daf8902f3ed2a6bfac8eb6117a648973d9a8",
+      "message": "fix(join)!: preserve normalized unc paths (#196)",
+      "source_files": [
+        "src/path.ts"
+      ],
+      "test_files": [
+        "test/index.spec.ts"
+      ],
+      "hidden_tests": [
+        "test/index.spec.ts"
+      ],
+      "hunks": [
+        {
+          "file": "src/path.ts",
+          "start": 74,
+          "end": 77
+        },
+        {
+          "file": "src/path.ts",
+          "start": 79,
+          "end": 83
+        },
+        {
+          "file": "src/path.ts",
+          "start": 85,
+          "end": 85
+        },
+        {
+          "file": "src/path.ts",
+          "start": 86,
+          "end": 86
+        },
+        {
+          "file": "src/path.ts",
+          "start": 89,
+          "end": 91
+        },
+        {
+          "file": "src/path.ts",
+          "start": 93,
+          "end": 93
+        }
+      ]
+    },
+    {
+      "id": "sqlparse-bug-111b35cf",
+      "kind": "bug",
+      "repo": "https://github.com/andialbrecht/sqlparse",
+      "license": "BSD-3-Clause",
+      "language": "python",
+      "commit": "111b35cffcfe44b16fbdd27507f165bafd52a2a1",
+      "parent": "f80af6a4007f11ada847218df8c29dc859238290",
+      "message": "Fix function grouping skipped for lowercase 'as' in CREATE TABLE AS SELECT",
+      "source_files": [
+        "sqlparse/engine/grouping.py"
+      ],
+      "test_files": [
+        "tests/test_grouping.py"
+      ],
+      "hidden_tests": [
+        "tests/test_grouping.py"
+      ],
+      "hunks": [
+        {
+          "file": "sqlparse/engine/grouping.py",
+          "start": 384,
+          "end": 384
+        }
+      ]
+    },
+    {
+      "id": "sqlparse-bug-1a3bfbd5",
+      "kind": "bug",
+      "repo": "https://github.com/andialbrecht/sqlparse",
+      "license": "BSD-3-Clause",
+      "language": "python",
+      "commit": "1a3bfbd50b82c05d9adcc51bacba059671dc1bc7",
+      "parent": "e92a032c81d51a6645b4f8c32470481894818ba0",
+      "message": "Fix handling of semicolons inside BEGIN...END blocks (fixes #809).",
+      "source_files": [
+        "sqlparse/engine/statement_splitter.py"
+      ],
+      "test_files": [
+        "tests/test_split.py"
+      ],
+      "hidden_tests": [
+        "tests/test_split.py"
+      ],
+      "hunks": [
+        {
+          "file": "sqlparse/engine/statement_splitter.py",
+          "start": 22,
+          "end": 22
+        },
+        {
+          "file": "sqlparse/engine/statement_splitter.py",
+          "start": 56,
+          "end": 56
+        },
+        {
+          "file": "sqlparse/engine/statement_splitter.py",
+          "start": 109,
+          "end": 110
+        },
+        {
+          "file": "sqlparse/engine/statement_splitter.py",
+          "start": 111,
+          "end": 111
+        }
+      ]
+    },
+    {
+      "id": "sqlparse-bug-5ca50a2e",
+      "kind": "bug",
+      "repo": "https://github.com/andialbrecht/sqlparse",
+      "license": "BSD-3-Clause",
+      "language": "python",
+      "commit": "5ca50a2ee9b39e9efeea33e01f132d628144fb69",
+      "parent": "acd8e5817b5be5f9b9a7b159c1bacc45179f4e44",
+      "message": "Fix splitting of BEGIN TRANSACTION statements (fixes #826).",
+      "source_files": [
+        "sqlparse/engine/statement_splitter.py"
+      ],
+      "test_files": [
+        "tests/test_split.py"
+      ],
+      "hidden_tests": [
+        "tests/test_split.py"
+      ],
+      "hunks": [
+        {
+          "file": "sqlparse/engine/statement_splitter.py",
+          "start": 63,
+          "end": 63
+        },
+        {
+          "file": "sqlparse/engine/statement_splitter.py",
+          "start": 124,
+          "end": 124
+        }
+      ]
+    },
+    {
+      "id": "sqlparse-bug-e92a032c",
+      "kind": "bug",
+      "repo": "https://github.com/andialbrecht/sqlparse",
+      "license": "BSD-3-Clause",
+      "language": "python",
+      "commit": "e92a032c81d51a6645b4f8c32470481894818ba0",
+      "parent": "149bebf06c788e93a9b0dbee0e5abbc8e347b8e6",
+      "message": "Fix handling of IF EXISTS statements in BEGIN...END blocks (fixes #812).",
+      "source_files": [
+        "sqlparse/keywords.py"
+      ],
+      "test_files": [
+        "tests/test_split.py"
+      ],
+      "hidden_tests": [
+        "tests/test_split.py"
+      ],
+      "hunks": [
+        {
+          "file": "sqlparse/keywords.py",
+          "start": 72,
+          "end": 72
+        }
+      ]
+    },
+    {
+      "id": "sqlparse-bug-f66d12c2",
+      "kind": "bug",
+      "repo": "https://github.com/andialbrecht/sqlparse",
+      "license": "BSD-3-Clause",
+      "language": "python",
+      "commit": "f66d12c245412f28c58f045b646eb53c0e691b8b",
+      "parent": "df8e28495a87954a9d52de70c33ef7225c53b28f",
+      "message": "Fix get_real_name for names with more than two dotted parts (#332)",
+      "source_files": [
+        "sqlparse/sql.py"
+      ],
+      "test_files": [
+        "tests/test_parse.py"
+      ],
+      "hidden_tests": [
+        "tests/test_parse.py"
+      ],
+      "hunks": [
+        {
+          "file": "sqlparse/sql.py",
+          "start": 21,
+          "end": 22
+        }
+      ]
+    },
+    {
+      "id": "tabulate-bug-3aa568c6",
+      "kind": "bug",
+      "repo": "https://github.com/astanin/python-tabulate",
+      "license": "MIT",
+      "language": "python",
+      "commit": "3aa568c66987dbc97c079c6a2e4bd0ad362a949f",
+      "parent": "2939dc1d17e13a71c256042d9ad46bfd9d8a07b8",
+      "message": "fix #408 - remove trailing whitespace from asciidoc output",
+      "source_files": [
+        "tabulate/__init__.py"
+      ],
+      "test_files": [
+        "test/test_output.py",
+        "test/test_regression.py"
+      ],
+      "hidden_tests": [
+        "test/test_output.py",
+        "test/test_regression.py"
+      ],
+      "hunks": [
+        {
+          "file": "tabulate/__init__.py",
+          "start": 281,
+          "end": 281
+        },
+        {
+          "file": "tabulate/__init__.py",
+          "start": 286,
+          "end": 286
+        },
+        {
+          "file": "tabulate/__init__.py",
+          "start": 296,
+          "end": 296
+        },
+        {
+          "file": "tabulate/__init__.py",
+          "start": 298,
+          "end": 298
+        }
+      ]
+    },
+    {
+      "id": "tabulate-bug-8014ec66",
+      "kind": "bug",
+      "repo": "https://github.com/astanin/python-tabulate",
+      "license": "MIT",
+      "language": "python",
+      "commit": "8014ec66820c89307005b26f878119baa5bf6932",
+      "parent": "7c70bf451bc00ba64c3d8587909fa08d16a958e0",
+      "message": "Fix alignments in `github` tables",
+      "source_files": [
+        "tabulate/__init__.py"
+      ],
+      "test_files": [
+        "test/test_output.py"
+      ],
+      "hidden_tests": [
+        "test/test_output.py"
+      ],
+      "hunks": [
+        {
+          "file": "tabulate/__init__.py",
+          "start": 525,
+          "end": 534
+        },
+        {
+          "file": "tabulate/__init__.py",
+          "start": 721,
+          "end": 721
+        }
+      ]
+    },
+    {
+      "id": "tabulate-bug-e6a24aa6",
+      "kind": "bug",
+      "repo": "https://github.com/astanin/python-tabulate",
+      "license": "MIT",
+      "language": "python",
+      "commit": "e6a24aa6e00ca8ce9a1987f28c11ca08c6f19383",
+      "parent": "46c9fe38d36e1f185271884ace2e80415389216c",
+      "message": "fix #241 - escape pipe character in github and pipe formats",
+      "source_files": [
+        "tabulate/__init__.py"
+      ],
+      "test_files": [
+        "test/test_regression.py"
+      ],
+      "hidden_tests": [
+        "test/test_regression.py"
+      ],
+      "hunks": [
+        {
+          "file": "tabulate/__init__.py",
+          "start": 19,
+          "end": 19
+        },
+        {
+          "file": "tabulate/__init__.py",
+          "start": 21,
+          "end": 21
+        },
+        {
+          "file": "tabulate/__init__.py",
+          "start": 335,
+          "end": 335
+        },
+        {
+          "file": "tabulate/__init__.py",
+          "start": 531,
+          "end": 532
+        },
+        {
+          "file": "tabulate/__init__.py",
+          "start": 2517,
+          "end": 2517
+        },
+        {
+          "file": "tabulate/__init__.py",
+          "start": 2519,
+          "end": 2519
+        },
+        {
+          "file": "tabulate/__init__.py",
+          "start": 2527,
+          "end": 2527
+        }
+      ]
+    },
+    {
+      "id": "ufo-bug-4d024df0",
+      "kind": "bug",
+      "repo": "https://github.com/unjs/ufo",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "4d024df0134e2484b1e22ba17a08fea31e90de92",
+      "parent": "e383832e6aa1253a0b423cbb588bc0716f274f83",
+      "message": "fix(parseQuery): use object with null prototype (#286)",
+      "source_files": [
+        "src/query.ts"
+      ],
+      "test_files": [
+        "test/query.test.ts"
+      ],
+      "hidden_tests": [
+        "test/query.test.ts"
+      ],
+      "hunks": [
+        {
+          "file": "src/query.ts",
+          "start": 20,
+          "end": 20
+        },
+        {
+          "file": "src/query.ts",
+          "start": 34,
+          "end": 34
+        }
+      ]
+    },
+    {
+      "id": "ufo-bug-62199a0c",
+      "kind": "bug",
+      "repo": "https://github.com/unjs/ufo",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "62199a0cc84727b7b4666aaca8ff04cca2f68f3a",
+      "parent": "1954caebf751d22f04fff059fc09412de3c6b86d",
+      "message": "fix(withProtocol): consider relative protocol (#242)",
+      "source_files": [
+        "src/utils.ts"
+      ],
+      "test_files": [
+        "test/utilities.test.ts"
+      ],
+      "hidden_tests": [
+        "test/utilities.test.ts"
+      ],
+      "hunks": [
+        {
+          "file": "src/utils.ts",
+          "start": 459,
+          "end": 459
+        }
+      ]
+    },
+    {
+      "id": "ufo-bug-7959de5b",
+      "kind": "bug",
+      "repo": "https://github.com/unjs/ufo",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "7959de5b49f52e7eb2919a33a9bfe30911e05712",
+      "parent": "4d024df0134e2484b1e22ba17a08fea31e90de92",
+      "message": "fix(parseFilename): use optional chaining to access `opts.strict` (#284)",
+      "source_files": [
+        "src/parse.ts"
+      ],
+      "test_files": [
+        "test/parse.test.ts"
+      ],
+      "hidden_tests": [
+        "test/parse.test.ts"
+      ],
+      "hunks": [
+        {
+          "file": "src/parse.ts",
+          "start": 199,
+          "end": 199
+        },
+        {
+          "file": "src/parse.ts",
+          "start": 201,
+          "end": 201
+        },
+        {
+          "file": "src/parse.ts",
+          "start": 203,
+          "end": 203
+        }
+      ]
+    },
+    {
+      "id": "ufo-bug-eb299454",
+      "kind": "bug",
+      "repo": "https://github.com/unjs/ufo",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "eb29945470c8629309764f026a36e7f477a9a1ff",
+      "parent": "5fb179d51384301ffb66b48e213863a27cadd1ff",
+      "message": "fix(withBase, withoutBase): prevent false prefix matches (#313)",
+      "source_files": [
+        "src/utils.ts"
+      ],
+      "test_files": [
+        "test/base.test.ts"
+      ],
+      "hidden_tests": [
+        "test/base.test.ts"
+      ],
+      "hunks": [
+        {
+          "file": "src/utils.ts",
+          "start": 296,
+          "end": 296
+        },
+        {
+          "file": "src/utils.ts",
+          "start": 321,
+          "end": 321
+        }
+      ]
+    },
+    {
+      "id": "humanize-clean-711df91a",
+      "kind": "clean",
+      "repo": "https://github.com/python-humanize/humanize",
+      "license": "MIT",
+      "language": "python",
+      "commit": "711df91a282aef168db36a8d3a3e185c5f673a92",
+      "parent": "d38f68595c3e2262fc61a57bf73e38612b5a4279",
+      "message": "Add handling for en_GB and en_US locale",
+      "source_files": [
+        "src/humanize/i18n.py"
+      ],
+      "test_files": [
+        "tests/test_i18n.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "humanize-clean-a2006eab",
+      "kind": "clean",
+      "repo": "https://github.com/python-humanize/humanize",
+      "license": "MIT",
+      "language": "python",
+      "commit": "a2006eabf832081cc60d8579d9d53789ed8d8d0b",
+      "parent": "b5ba01bf2301bfa834dce91fb0d3eab117471407",
+      "message": "Use Turkish numeric separators (#465)",
+      "source_files": [
+        "src/humanize/i18n.py"
+      ],
+      "test_files": [
+        "tests/test_i18n.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "humanize-clean-d7f5dc5d",
+      "kind": "clean",
+      "repo": "https://github.com/python-humanize/humanize",
+      "license": "MIT",
+      "language": "python",
+      "commit": "d7f5dc5d60a4eb8f43b1ff6ddb842030062e9910",
+      "parent": "19b43d3b8d80959d75097d8e145690be811465bd",
+      "message": "Add natural_list (#110)",
+      "source_files": [
+        "src/humanize/__init__.py",
+        "src/humanize/lists.py"
+      ],
+      "test_files": [
+        "tests/test_lists.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "humanize-clean-f772e59b",
+      "kind": "clean",
+      "repo": "https://github.com/python-humanize/humanize",
+      "license": "MIT",
+      "language": "python",
+      "commit": "f772e59bf67b14e8f5565d9f489966db1df45381",
+      "parent": "7c341b9d49f3b8687526d8e50cae5f5a5d31582d",
+      "message": "use proper decimal separator for french",
+      "source_files": [
+        "src/humanize/i18n.py"
+      ],
+      "test_files": [
+        "tests/test_i18n.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "humanize-clean-ffdf407f",
+      "kind": "clean",
+      "repo": "https://github.com/python-humanize/humanize",
+      "license": "MIT",
+      "language": "python",
+      "commit": "ffdf407fdfe1a5738159b989eb2df190ed780448",
+      "parent": "bada0f88b4d115b96d94db1fe73b20579e84fc14",
+      "message": "Support general iterables in `natural_list` (#381)",
+      "source_files": [
+        "src/humanize/lists.py"
+      ],
+      "test_files": [
+        "tests/test_lists.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "marshmallow-clean-07c9c18d",
+      "kind": "clean",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "07c9c18d8aad7a0f4c0da3e2611867d81eae79e6",
+      "parent": "6ffff7fbaecfa14b88e54df707ba53caa2ac9652",
+      "message": "Add CONTEXT context variable",
+      "source_files": [
+        "src/marshmallow/__init__.py",
+        "src/marshmallow/schema.py"
+      ],
+      "test_files": [
+        "tests/test_schema.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "marshmallow-clean-4f4e0488",
+      "kind": "clean",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "4f4e0488daee3f2a263ce3b7951f5c10c3da1c94",
+      "parent": "07c9c18d8aad7a0f4c0da3e2611867d81eae79e6",
+      "message": "Expose Context context manager",
+      "source_files": [
+        "src/marshmallow/__init__.py"
+      ],
+      "test_files": [
+        "tests/test_schema.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "marshmallow-clean-63abfc11",
+      "kind": "clean",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "63abfc11ef5c0d8c1aeb007f4256b8b8a28f19ab",
+      "parent": "17bd038024bd413cf783c5a52e02662a0edb81b9",
+      "message": "Add typing to context.py",
+      "source_files": [
+        "src/marshmallow/experimental/context.py"
+      ],
+      "test_files": [
+        "tests/test_context.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "marshmallow-clean-6fac57d4",
+      "kind": "clean",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "6fac57d41cc86fd960cbd92daca9c32181a21aed",
+      "parent": "feffc2e805a448b5729d4c82f412ecab365da277",
+      "message": "Allow passing a default to Context.get",
+      "source_files": [
+        "src/marshmallow/context.py"
+      ],
+      "test_files": [
+        "tests/test_schema.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "marshmallow-clean-b047565a",
+      "kind": "clean",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "b047565aec9a76a877197f0edd2c62cc5ec9b236",
+      "parent": "e28da9afd4249f00bfb568bf69cbdf30110c93b5",
+      "message": "Allow fields to accept their internal value types (#2730)",
+      "source_files": [
+        "src/marshmallow/fields.py"
+      ],
+      "test_files": [
+        "tests/test_deserialization.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "marshmallow-clean-cf9c3a86",
+      "kind": "clean",
+      "repo": "https://github.com/marshmallow-code/marshmallow",
+      "license": "MIT",
+      "language": "python",
+      "commit": "cf9c3a86f07de69d921214fab3dc4e29bff459e8",
+      "parent": "a33a5f7a6c7ac961d216dbd27aa78f30e171ba54",
+      "message": "Rename pass_many to pass_collection (#2715)",
+      "source_files": [
+        "src/marshmallow/decorators.py",
+        "src/marshmallow/schema.py"
+      ],
+      "test_files": [
+        "tests/test_decorators.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "more-itertools-clean-1f301094",
+      "kind": "clean",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "1f3010943583822e1c219816717fc00d204b4370",
+      "parent": "9754ae8cd9c06dff2e968e131d08be229c099358",
+      "message": "Add totient and reshape, improve unique_justseen",
+      "source_files": [
+        "more_itertools/recipes.py"
+      ],
+      "test_files": [
+        "tests/test_recipes.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "more-itertools-clean-41dda9e7",
+      "kind": "clean",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "41dda9e791ec742a8e7fc8a7481e53907b03fe87",
+      "parent": "3142520c202ce3da01906ac4b2564b94ba7b935a",
+      "message": "Add polynomial_derivative",
+      "source_files": [
+        "more_itertools/recipes.py"
+      ],
+      "test_files": [
+        "tests/test_recipes.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "more-itertools-clean-6887a7bd",
+      "kind": "clean",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "6887a7bd5ac3787a8721eddca9c93dd4d3eda5f7",
+      "parent": "95d91e4e905053e2c0db17bf659ab5d5046d61fb",
+      "message": "Add running_median",
+      "source_files": [
+        "more_itertools/recipes.py"
+      ],
+      "test_files": [
+        "tests/test_recipes.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "more-itertools-clean-9e10fa4f",
+      "kind": "clean",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "9e10fa4ff40ef807aaffcdab3c7d6fb1c2e43678",
+      "parent": "69447522f2f12dd3ddf7d5df2eff4b853d860f91",
+      "message": "Add unique()",
+      "source_files": [
+        "more_itertools/recipes.py"
+      ],
+      "test_files": [
+        "tests/test_recipes.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "more-itertools-clean-db4f41b2",
+      "kind": "clean",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "db4f41b28050aa3aa5d5df5294f446299bba5356",
+      "parent": "c0ed9d187906d202b9276a0750b3c377584cb75f",
+      "message": "Add running_mean recipe",
+      "source_files": [
+        "more_itertools/recipes.py"
+      ],
+      "test_files": [
+        "tests/test_recipes.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "more-itertools-clean-ed2d8d2a",
+      "kind": "clean",
+      "repo": "https://github.com/more-itertools/more-itertools",
+      "license": "MIT",
+      "language": "python",
+      "commit": "ed2d8d2a510532818d65d3ee1a168e55d717427e",
+      "parent": "1f3010943583822e1c219816717fc00d204b4370",
+      "message": "Add a strict argument for batched",
+      "source_files": [
+        "more_itertools/recipes.py"
+      ],
+      "test_files": [
+        "tests/test_recipes.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "sqlparse-clean-8238a9e4",
+      "kind": "clean",
+      "repo": "https://github.com/andialbrecht/sqlparse",
+      "license": "BSD-3-Clause",
+      "language": "python",
+      "commit": "8238a9e450ed1524e40cb3a8b0b3c00606903aeb",
+      "parent": "e66046785b816e5c2d22f101f36faefd19c4a771",
+      "message": "Optimize regular expression for identifying line breaks in comments.",
+      "source_files": [
+        "sqlparse/filters/others.py"
+      ],
+      "test_files": [
+        "tests/test_format.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "sqlparse-clean-e9729390",
+      "kind": "clean",
+      "repo": "https://github.com/andialbrecht/sqlparse",
+      "license": "BSD-3-Clause",
+      "language": "python",
+      "commit": "e9729390c0274392f2c1883f629e473a6914ce60",
+      "parent": "aa0b85e3f754284244f6900fe90cee505a3509f5",
+      "message": "support typed literals (if that's what they're called)",
+      "source_files": [
+        "sqlparse/engine/grouping.py",
+        "sqlparse/keywords.py",
+        "sqlparse/sql.py"
+      ],
+      "test_files": [
+        "tests/test_grouping.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "sqlparse-clean-f578d03e",
+      "kind": "clean",
+      "repo": "https://github.com/andialbrecht/sqlparse",
+      "license": "BSD-3-Clause",
+      "language": "python",
+      "commit": "f578d03ef7a0d1b0f84c59c4699ee307e725fc9c",
+      "parent": "10231d89d76cb467729fb7391c6a80938d6c5f76",
+      "message": "Improve formatting of type casts in parentheses.",
+      "source_files": [
+        "sqlparse/filters/reindent.py"
+      ],
+      "test_files": [
+        "tests/test_regressions.py"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "std-env-clean-0766ba3f",
+      "kind": "clean",
+      "repo": "https://github.com/unjs/std-env",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "0766ba3f391db510f40448ec7540e37d49cc5d28",
+      "parent": "ed44007b78a936d98b04ee03f944dc23a81163c3",
+      "message": "feat: add isNub runtime detection (#197)",
+      "source_files": [
+        "src/index.ts",
+        "src/runtimes.ts"
+      ],
+      "test_files": [
+        "test/index.test.ts"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "std-env-clean-3d65628e",
+      "kind": "clean",
+      "repo": "https://github.com/unjs/std-env",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "3d65628eabdfaf1a7f3cc31e5d2634f3566cb304",
+      "parent": "99ba786711f4f2d1bb3fbf5bfd23c64c3cd432d7",
+      "message": "feat(agents): detect GitHub Copilot agent and CLI (#217)",
+      "source_files": [
+        "src/agents.ts"
+      ],
+      "test_files": [
+        "test/agents.test.ts"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "std-env-clean-48b4fc0b",
+      "kind": "clean",
+      "repo": "https://github.com/unjs/std-env",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "48b4fc0b09db087f726ab33d4a7b816e3c1ca5f2",
+      "parent": "3c547d84c78e5f54a29c8b70731d5f1b3c86c616",
+      "message": "feat: platform agnostic process",
+      "source_files": [
+        "src/_process.ts",
+        "src/index.ts",
+        "src/process.ts"
+      ],
+      "test_files": [
+        "test/index.test.ts"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "std-env-clean-bafddbc5",
+      "kind": "clean",
+      "repo": "https://github.com/unjs/std-env",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "bafddbc5eddeb8cba5f5f56d0a96384ad596cc9b",
+      "parent": "0766ba3f391db510f40448ec7540e37d49cc5d28",
+      "message": "refactor: normalize gitHub copilot cloud agent alias (#219)",
+      "source_files": [
+        "src/agents.ts"
+      ],
+      "test_files": [
+        "test/agents.test.ts"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    },
+    {
+      "id": "std-env-clean-d57a5d89",
+      "kind": "clean",
+      "repo": "https://github.com/unjs/std-env",
+      "license": "MIT",
+      "language": "typescript",
+      "commit": "d57a5d89c90a208a0744e4f5ae1ba584a4234315",
+      "parent": "3250631b203dcbf4ee28a9f2f73c821638ae495d",
+      "message": "refactor: clarify runtimes and `isNode` behavior (#108)",
+      "source_files": [
+        "src/runtimes.ts"
+      ],
+      "test_files": [
+        "test/index.test.ts"
+      ],
+      "hidden_tests": [],
+      "hunks": []
+    }
+  ]
+}

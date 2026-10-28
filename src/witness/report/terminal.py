@@ -15,6 +15,7 @@ STATUS_STYLE = {
     Status.PRE_EXISTING: "yellow",
     Status.REJECTED: "green",
     Status.UNVERIFIED: "dim",
+    Status.UNTESTED: "yellow",
 }
 LEXER = {"python": "python", "typescript": "typescript"}
 
@@ -40,11 +41,15 @@ class TerminalReporter:
         for finding in result.with_status(Status.VERIFIED):
             c.print(_finding_panel(finding, LEXER.get(result.language, "text")))
 
-        discarded = [f for f in result.findings if f.status is not Status.VERIFIED]
+        untested = result.with_status(Status.UNTESTED)
+        if untested:
+            c.print(_table("Reported without verification (--no-verify)", untested))
+        hidden_statuses = {Status.VERIFIED, Status.UNTESTED}
         if not self.show_unverified:
-            discarded = [f for f in discarded if f.status is not Status.UNVERIFIED]
+            hidden_statuses.add(Status.UNVERIFIED)
+        discarded = [f for f in result.findings if f.status not in hidden_statuses]
         if discarded:
-            c.print(_discarded_table(discarded))
+            c.print(_table("Not reported: hypotheses that failed verification", discarded))
 
         hidden = len(result.with_status(Status.UNVERIFIED))
         usage = result.usage
@@ -68,8 +73,11 @@ def _summary(result: ReviewResult) -> Text:
         (Status.PRE_EXISTING, "pre-existing"),
         (Status.REJECTED, "rejected"),
         (Status.UNVERIFIED, "unverified"),
+        (Status.UNTESTED, "untested"),
     ):
         count = len(result.with_status(status))
+        if status is Status.UNTESTED and not count:
+            continue
         text.append(f"{count} {label}", style=STATUS_STYLE[status] if count else "dim")
         text.append("   ")
     candidates = len(result.findings)
@@ -123,13 +131,8 @@ def _attempt_trail(finding: Finding) -> str:
     return " -> ".join(steps)
 
 
-def _discarded_table(findings: list[Finding]) -> Table:
-    table = Table(
-        title="Not reported: hypotheses that failed verification",
-        title_justify="left",
-        title_style="bold",
-        expand=True,
-    )
+def _table(title: str, findings: list[Finding]) -> Table:
+    table = Table(title=title, title_justify="left", title_style="bold", expand=True)
     table.add_column("id", no_wrap=True)
     table.add_column("status", no_wrap=True)
     table.add_column("claim", ratio=1)

@@ -107,8 +107,10 @@ def python_requirements(root: Path) -> list[str]:
         data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
         requirements += data.get("project", {}).get("dependencies", [])
         groups = data.get("dependency-groups", {})
-        for name in ("test", "dev"):
+        extras = data.get("project", {}).get("optional-dependencies", {})
+        for name in ("test", "tests", "testing", "dev"):
             requirements += [r for r in groups.get(name, []) if isinstance(r, str)]
+            requirements += [r for r in extras.get(name, []) if isinstance(r, str)]
     for name in ("requirements.txt", "requirements-dev.txt", "requirements-test.txt"):
         path = root / name
         if path.is_file():

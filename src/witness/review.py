@@ -12,7 +12,7 @@ from witness import git, tracing
 from witness.context import DEFAULT_BUDGET_TOKENS, build_context
 from witness.hypothesize import hypothesize
 from witness.llm import LLM
-from witness.models import ReviewResult
+from witness.models import Finding, ReviewResult, Status
 from witness.project import detect_project
 from witness.prove import Prover, Sandbox, Trees
 from witness.sandbox import DockerSandbox, Runner, runner_for
@@ -26,6 +26,8 @@ class ReviewOptions:
     max_attempts: int = 3
     propose_fixes: bool = True
     budget_tokens: int = DEFAULT_BUDGET_TOKENS
+    # False reproduces a conventional AI reviewer: every hypothesis is reported untested.
+    verify: bool = True
 
 
 def review(
@@ -58,8 +60,13 @@ def review(
             repo, base, head, trees.head, project, budget_tokens=options.budget_tokens
         )
         candidates = hypothesize(llm, context, max_candidates=options.max_candidates)
-        findings = []
-        if candidates:
+        findings: list[Finding] = []
+        if candidates and not options.verify:
+            findings = [
+                Finding(candidate=c, status=Status.UNTESTED, reason="verification disabled")
+                for c in candidates
+            ]
+        elif candidates:
             sandbox = sandbox_factory(runner, trees.head)
             prover = Prover(
                 llm,

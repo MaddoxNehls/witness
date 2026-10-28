@@ -1,0 +1,142 @@
+{
+  "model": "claude-opus-5-5",
+  "responses": {
+    "hypothesize": {
+      "candidates": [
+        {
+          "id": "C1",
+          "claim": "`load` gained a `context` parameter, but `loads` was not updated to accept or forward it. A `context` kwarg falls into `**kwargs` and goes to `render_module.loads` (json.loads), which raises TypeError instead of applying the context.",
+          "file": "src/marshmallow/schema.py",
+          "line_start": 726,
+          "line_end": 756,
+          "trigger": "Use a schema with a field that reads `CONTEXT.get({})`, then call `schema.loads('{\"ctx_fld\": 1}', context={'factor': 2})`. Expected `{'ctx_fld': 2}`; actual is `TypeError: JSONDecoder.__init__() got an unexpected keyword argument 'context'`.",
+          "severity": "medium",
+          "confidence": 0.45
+        },
+        {
+          "id": "C2",
+          "claim": "`dump` gained a `context` parameter, but `dumps` neither accepts nor forwards it. A `context` kwarg is passed through `**kwargs` to `json.dumps`, which fails with TypeError, so the context is never applied during serialization.",
+          "file": "src/marshmallow/schema.py",
+          "line_start": 557,
+          "line_end": 572,
+          "trigger": "Call `schema.dumps({'ctx_fld': 1}, context={'factor': 2})` on a schema with a field that multiplies by `CONTEXT.get({}).get('factor', 1)`. Expected `'{\"ctx_fld\": 2}'`; actual is TypeError from `json.dumps` (unexpected keyword `context`).",
+          "severity": "medium",
+          "confidence": 0.45
+        },
+        {
+          "id": "C3",
+          "claim": "`validate` runs `_do_load` without accepting a `context` and without setting CONTEXT. Context-dependent field deserialization or validation therefore gives different results under `validate` than under `load(..., context=...)`, and passing `context=` raises TypeError.",
+          "file": "src/marshmallow/schema.py",
+          "line_start": 778,
+          "line_end": 806,
+          "trigger": "Call `schema.validate({'ctx_fld': 1}, context={'factor': 2})`. It raises `TypeError: validate() got an unexpected keyword argument 'context'`.",
+          "severity": "low",
+          "confidence": 0.3
+        }
+      ]
+    },
+    "prove/C1/attempt-1": {
+      "reasoning": "On HEAD, `Schema.load` accepts a `context` keyword, but `Schema.loads` does not. `loads` collects any extra keywords in `**kwargs` and passes them to `self.opts.render_module.loads`, which is the stdlib `json.loads` by default. So calling `loads(..., context={...})` sends `context` to `json.loads`. That forwards it to `JSONDecoder(**kw)`, which raises `TypeError` for the unexpected keyword. The test asserts the correct behaviour: the context should be applied, giving `{'ctx_fld': 2}`.",
+      "concede": false,
+      "test_code": "from marshmallow import Schema, fields\nfrom marshmallow.schema import CONTEXT\n\n\ndef test_loads_forwards_context():\n    class ContextField(fields.Integer):\n        def _deserialize(self, value, attr, data, **kwargs):\n            val = super()._deserialize(value, attr, data, **kwargs)\n            return val * (CONTEXT.get() or {}).get(\"factor\", 1)\n\n    class ContextSchema(Schema):\n        ctx_fld = ContextField()\n\n    schema = ContextSchema()\n    assert schema.load({\"ctx_fld\": 1}, context={\"factor\": 2}) == {\"ctx_fld\": 2}\n    result = schema.loads('{\"ctx_fld\": 1}', context={\"factor\": 2})\n    assert result == {\"ctx_fld\": 2}\n",
+      "expected_failure": {
+        "kind": "exception",
+        "exception_type": "TypeError"
+      }
+    },
+    "fix/C1": {
+      "explanation": "`loads` did not accept a `context` keyword, so it fell into `**kwargs` and was passed to `render_module.loads` (json.loads), which raised TypeError. The fix adds an explicit `context` keyword parameter to `loads` and passes it on to `load`, which already applies the context via `Context`.",
+      "edits": [
+        {
+          "file": "src/marshmallow/schema.py",
+          "find": "        unknown: str | None = None,\n        **kwargs,\n    ):\n        \"\"\"Same as :meth:`load`, except it takes a JSON string as input.",
+          "replace": "        unknown: str | None = None,\n        context: typing.Any = None,\n        **kwargs,\n    ):\n        \"\"\"Same as :meth:`load`, except it takes a JSON string as input."
+        },
+        {
+          "file": "src/marshmallow/schema.py",
+          "find": "        return self.load(data, many=many, partial=partial, unknown=unknown)",
+          "replace": "        return self.load(\n            data, many=many, partial=partial, unknown=unknown, context=context\n        )"
+        }
+      ]
+    },
+    "prove/C2/attempt-1": {
+      "reasoning": "On HEAD, `dump` accepts `context`, but `dumps` has the signature `(obj, *args, many=None, **kwargs)`. It calls `self.dump(obj, many=many)` without the context, then forwards `**kwargs`, including `context`, to `json.dumps`. `json.dumps` passes unknown kwargs to `JSONEncoder`, which raises `TypeError` for the unexpected `context` keyword. The test checks the correct behaviour: `dumps` applies the context just as `dump` does.",
+      "concede": false,
+      "test_code": "import json\n\nfrom marshmallow import Schema, fields\nfrom marshmallow.schema import CONTEXT\n\n\ndef test_dumps_forwards_context():\n    class ContextField(fields.Integer):\n        def _serialize(self, value, attr, obj, **kwargs):\n            value *= (CONTEXT.get() or {}).get(\"factor\", 1)\n            return super()._serialize(value, attr, obj, **kwargs)\n\n    class ContextSchema(Schema):\n        ctx_fld = ContextField()\n\n    schema = ContextSchema()\n    assert schema.dump({\"ctx_fld\": 1}, context={\"factor\": 2}) == {\"ctx_fld\": 2}\n    result = schema.dumps({\"ctx_fld\": 1}, context={\"factor\": 2})\n    assert json.loads(result) == {\"ctx_fld\": 2}\n",
+      "expected_failure": {
+        "kind": "exception",
+        "exception_type": "TypeError"
+      }
+    },
+    "fix/C2": {
+      "explanation": "`dumps` did not accept a `context` keyword, so it fell into `**kwargs` and was handed to `json.dumps`, which raised TypeError. The fix adds a keyword-only `context` parameter to `dumps` and passes it to `dump`. Calls that don't use `context` work exactly as before.",
+      "edits": [
+        {
+          "file": "src/marshmallow/schema.py",
+          "find": "    def dumps(self, obj: typing.Any, *args, many: bool | None = None, **kwargs):",
+          "replace": "    def dumps(\n        self,\n        obj: typing.Any,\n        *args,\n        many: bool | None = None,\n        context: typing.Any = None,\n        **kwargs,\n    ):"
+        },
+        {
+          "file": "src/marshmallow/schema.py",
+          "find": "        serialized = self.dump(obj, many=many)\n        return self.opts.render_module.dumps(serialized, *args, **kwargs)",
+          "replace": "        serialized = self.dump(obj, many=many, context=context)\n        return self.opts.render_module.dumps(serialized, *args, **kwargs)"
+        }
+      ]
+    },
+    "prove/C3/attempt-1": {
+      "reasoning": "On HEAD, `load` and `dump` accept a `context` keyword and set the CONTEXT contextvar while they run. `validate` uses the same `_do_load` machinery but was not updated. It has no `context` parameter and never sets CONTEXT. The test defines a field whose validity depends on `CONTEXT`: it passes only when the context factor is 2. `load(..., context={'factor': 2})` succeeds. The equivalent `validate(..., context={'factor': 2})` should return `{}` (no errors), but on HEAD it raises `TypeError` for the unexpected keyword argument. Caveat: BASE never accepted `context` on `validate`, so this is an inconsistency left by the change, not a regression from BASE. The test will likely fail on BASE as well.",
+      "concede": false,
+      "test_code": "from marshmallow import CONTEXT, Schema, fields, ValidationError\n\n\nclass ContextField(fields.Integer):\n    def _deserialize(self, value, attr, data, **kwargs):\n        val = super()._deserialize(value, attr, data, **kwargs)\n        ctx = CONTEXT.get() or {}\n        if ctx.get(\"factor\") != 2:\n            raise ValidationError(\"context missing\")\n        return val * ctx[\"factor\"]\n\n\nclass ContextSchema(Schema):\n    ctx_fld = ContextField()\n\n\ndef test_validate_honours_context_like_load():\n    schema = ContextSchema()\n    # load with context works on HEAD\n    assert schema.load({\"ctx_fld\": 1}, context={\"factor\": 2}) == {\"ctx_fld\": 2}\n    # validate should behave consistently with load given the same context\n    errors = schema.validate({\"ctx_fld\": 1}, context={\"factor\": 2})\n    assert errors == {}\n",
+      "expected_failure": {
+        "kind": "exception",
+        "exception_type": "TypeError"
+      }
+    },
+    "prove/C3/attempt-2": {
+      "reasoning": "Conceding. The only observable 'failure' is that `validate()` rejects an unknown `context` keyword. That is a missing API parameter, not wrong behaviour. Witness classifies it as a test error because the test itself passes an unsupported argument. `validate` behaves correctly under a context. If the caller sets `CONTEXT`, for example with `with Context(...)` or `CONTEXT.set(...)`, then `validate` calls `_do_load` and the fields see that context. So `load` and `validate` behave the same for the same active context. BASE also had no `context` parameter on `validate`, so the change introduced no regression. The claim is an API-consistency suggestion, not a demonstrable bug in returned values.",
+      "concede": true,
+      "test_code": "",
+      "expected_failure": {
+        "kind": "assertion",
+        "exception_type": null
+      }
+    }
+  },
+  "usage": {
+    "hypothesize": {
+      "input_tokens": 76629,
+      "output_tokens": 1289,
+      "cost_usd": 0.638804
+    },
+    "prove/C1/attempt-1": {
+      "input_tokens": 76979,
+      "output_tokens": 725,
+      "cost_usd": 0.630324
+    },
+    "fix/C1": {
+      "input_tokens": 78355,
+      "output_tokens": 366,
+      "cost_usd": 0.634152
+    },
+    "prove/C2/attempt-1": {
+      "input_tokens": 76979,
+      "output_tokens": 727,
+      "cost_usd": 0.630364
+    },
+    "fix/C2": {
+      "input_tokens": 78419,
+      "output_tokens": 379,
+      "cost_usd": 0.634924
+    },
+    "prove/C3/attempt-1": {
+      "input_tokens": 76926,
+      "output_tokens": 1145,
+      "cost_usd": 0.6383000000000001
+    },
+    "prove/C3/attempt-2": {
+      "input_tokens": 78252,
+      "output_tokens": 610,
+      "cost_usd": 0.638208
+    }
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "more-itertools": {
+    "scanned_candidates": {
+      "bug": 28,
+      "clean": 28
+    },
+    "kept": {
+      "bug": 6,
+      "clean": 6
+    },
+    "rejected": {
+      "tests do not pass on the fixed base": 1,
+      "environment": 1,
+      "hidden tests do not fail cleanly on the PR head": 2
+    }
+  },
+  "sqlparse": {
+    "scanned_candidates": {
+      "bug": 56,
+      "clean": 10
+    },
+    "kept": {
+      "bug": 5,
+      "clean": 3
+    },
+    "rejected": {
+      "tests do not pass on the fixed base": 1,
+      "tests do not pass on the head": 7
+    }
+  },
+  "humanize": {
+    "scanned_candidates": {
+      "bug": 21,
+      "clean": 11
+    },
+    "kept": {
+      "bug": 5,
+      "clean": 5
+    },
+    "rejected": {
+      "environment": 2,
+      "tests do not pass on the head": 3
+    }
+  },
+  "marshmallow": {
+    "scanned_candidates": {
+      "bug": 31,
+      "clean": 24
+    },
+    "kept": {
+      "bug": 5,
+      "clean": 6
+    },
+    "rejected": {
+      "environment": 2,
+      "hidden tests do not fail cleanly on the PR head": 2
+    }
+  },
+  "tabulate": {
+    "scanned_candidates": {
+      "bug": 47,
+      "clean": 0
+    },
+    "kept": {
+      "bug": 3,
+      "clean": 0
+    },
+    "rejected": {
+      "error": 1
+    }
+  },
+  "ufo": {
+    "scanned_candidates": {
+      "bug": 51,
+      "clean": 0
+    },
+    "kept": {
+      "bug": 4,
+      "clean": 0
+    },
+    "rejected": {
+      "environment": 1,
+      "hidden tests do not fail cleanly on the PR head": 1
+    }
+  },
+  "pathe": {
+    "scanned_candidates": {
+      "bug": 18,
+      "clean": 1
+    },
+    "kept": {
+      "bug": 2,
+      "clean": 0
+    },
+    "rejected": {
+      "tests do not pass on the fixed base": 3,
+      "environment": 3
+    }
+  },
+  "defu": {
+    "scanned_candidates": {
+      "bug": 3,
+      "clean": 5
+    },
+    "kept": {
+      "bug": 0,
+      "clean": 0
+    },
+    "rejected": {
+      "tests do not pass on the head": 2,
+      "environment": 3
+    }
+  },
+  "std-env": {
+    "scanned_candidates": {
+      "bug": 1,
+      "clean": 11
+    },
+    "kept": {
+      "bug": 0,
+      "clean": 5
+    },
+    "rejected": {
+      "environment": 5
+    }
+  }
+}

@@ -96,6 +96,7 @@ class Status(StrEnum):
     PRE_EXISTING = "pre_existing"  # reproduces, but fails the same way on BASE too
     REJECTED = "rejected"  # a well-formed repro passed on HEAD: evidence against the claim
     UNVERIFIED = "unverified"  # no valid repro within the attempt budget
+    UNTESTED = "untested"  # verification disabled (--no-verify ablation): reported as-is
 
 
 class FileEdit(BaseModel):

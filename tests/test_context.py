@@ -185,7 +185,7 @@ class TestProjectDetection:
         assert project == Project("python", "pytest", "python -m pytest -x", ".witness.yml")
         runner = runner_for(project)
         assert isinstance(runner, PytestRunner)
-        assert runner.test_command().startswith("python -m pytest -x ")
+        assert runner.test_command(["t.py"]).startswith("python -m pytest -x ")
 
     def test_invalid_witness_yml(self, tmp_path: Path) -> None:
         (tmp_path / ".witness.yml").write_text("runner: nose\n")

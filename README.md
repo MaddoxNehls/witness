@@ -8,9 +8,10 @@ over recall**. Every finding it reports comes with evidence produced by executio
 that fails on the change and passes without it, run in an isolated sandbox. A hypothesis
 that cannot be reproduced is dropped, however convincing it sounds.
 
-> Status: milestone 1 (CLI against a local repo) plus the core of milestone 2 (hardened
-> Docker sandbox, pytest and vitest runners). The GitHub App, eval harness and deployment
-> are next. See [docs/spec.md](docs/spec.md).
+> Status: milestones 1-4 are code-complete. The CLI, hardened Docker sandbox (pytest and
+> vitest), GitHub App (webhook, Postgres queue, worker, check runs, inline reviews) and the
+> eval harness with a 55-case benchmark are done. The App is not registered or deployed
+> yet (milestone 5). See [docs/spec.md](docs/spec.md) and [the eval results](#eval).
 
 ## What it looks like
 
@@ -202,19 +203,219 @@ witness review > hypothesize > chat claude-opus-5-5
 
 Without the extra, the import is guarded and every span is a no-op.
 
+## GitHub App
+
+```mermaid
+flowchart LR
+    GH["GitHub<br/>pull_request webhook"] -->|"POST /webhooks/github"| WEB["witness serve<br/>FastAPI: verify HMAC,<br/>dedupe, enqueue"]
+    WEB -->|"one transaction"| PG[("Postgres<br/>deliveries, jobs, reviews")]
+    PG -->|"claim: FOR UPDATE SKIP LOCKED"| WK["witness worker"]
+    WK -->|"fetch base + head<br/>(installation token)"| GH2["GitHub"]
+    WK -->|"review()"| SB["Docker sandbox"]
+    WK -->|"check run, PR review,<br/>supersede old comments"| GH2
+```
+
+- **Webhook** (`witness serve`). The `X-Hub-Signature-256` HMAC is checked in constant
+  time *before* the body is parsed; anything else is a 401. `pull_request`
+  `opened`/`synchronize`/`reopened` on an open PR becomes a job. Every other event is
+  recorded and ignored. The `X-GitHub-Delivery` id is the primary key of `deliveries`,
+  so GitHub's redeliveries are acknowledged and dropped.
+- **Queue: a Postgres table, not arq/Redis.** Postgres is already needed for review
+  history, so the queue adds no infrastructure. Recording the delivery, superseding
+  queued jobs for the same PR and enqueueing the new one happen in **one transaction**.
+  Workers claim with `FOR UPDATE SKIP LOCKED`, so any number can run without blocking
+  each other. A review takes minutes, so queue throughput is irrelevant. Delivery is at
+  least once: a job whose worker died is reclaimed after a 30-minute lease, at most 3
+  attempts.
+- **Worker** (`witness worker`). Opens an `in_progress` check run, fetches exactly the
+  base and head commits (`--depth=1`; the installation token is sent as an HTTP header
+  and never written to the remote URL or `.git/config`), runs the same `review()` as the
+  CLI, then posts:
+  - a **check run** with a summary table (verified, pre-existing, rejected and unverified
+    counts). The conclusion is `failure` when a bug is verified (it only blocks merging
+    if the repo makes the check required), `success` otherwise, and `neutral` if Witness
+    itself fails;
+  - one **PR review** with inline comments **only for VERIFIED findings**. Each has the
+    claim, the evidence, the repro test and the sandbox output in collapsible blocks, and
+    the verified fix as a GitHub ```` ```suggestion ```` block anchored to exactly the lines
+    it replaces. Comments are placed only on lines the PR diff shows (GitHub rejects
+    others); a finding outside the diff goes into the review body instead.
+- **Re-runs on `synchronize`.** A newer push supersedes queued jobs at enqueue time. A
+  running job checks before posting and drops its stale result. Once the new review is
+  posted, earlier Witness reviews on the PR have their body replaced with "superseded by
+  the review of `abc1234`" and their inline comments minimized as *outdated* (GraphQL
+  `minimizeComment`), so the PR never accumulates duplicate threads.
+- **History.** Every posted review is stored in `reviews` (head sha, check run id,
+  comment node ids, counts, and the full `ReviewResult` as JSONB).
+
+### Setting it up
+
+The App is described by [`github-app-manifest.json`](github-app-manifest.json). It
+requests only checks (write), pull requests (write), contents (read) and metadata
+(read), and subscribes only to `pull_request`. Registration uses GitHub's one-click
+[manifest flow](https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-from-a-manifest):
+
+```bash
+docker compose up -d                       # Postgres on localhost:5449
+# expose port 8000 publicly first (e.g. cloudflared, ngrok, smee.io)
+uv run python scripts/register_github_app.py --webhook-url https://<public-host>/webhooks/github
+#   opens github.com with the manifest filled in; after you click "Create", GitHub redirects
+#   back and the script writes .env.github-app plus the private key (both gitignored)
+set -a; . ./.env.github-app; set +a
+export ANTHROPIC_API_KEY=...               # or WITNESS_BACKEND=openrouter / claude-cli
+uv run witness serve --host 0.0.0.0 --port 8000
+uv run witness worker                      # run several for parallel reviews
+```
+
+Settings come from the environment: `WITNESS_GITHUB_APP_ID`,
+`WITNESS_GITHUB_PRIVATE_KEY_PATH` (or `WITNESS_GITHUB_PRIVATE_KEY`),
+`WITNESS_GITHUB_WEBHOOK_SECRET`, `WITNESS_DATABASE_URL` (default
+`postgresql://witness:witness@localhost:5449/witness`), `WITNESS_BACKEND` and
+`WITNESS_MODEL`. The worker needs a Docker daemon for the sandbox. Install the App on a
+repository and open a PR to trigger a review.
+
+## Eval
+
+The spec's headline question: **does verification buy precision, and what does it cost
+in recall?** `witness eval` answers it on a benchmark of real bugs.
+
+### The benchmark
+
+[`benchmark/manifest.json`](benchmark/manifest.json) holds **30 bug cases and 25 clean
+cases** from MIT/BSD repositories: more-itertools, sqlparse, humanize, marshmallow and
+tabulate (Python), and ufo, pathe and std-env (TypeScript, vitest). A ninth repo, defu,
+was mined but none of its candidates survived validation, and clean candidates were
+scarcer, hence 25 rather than 30 (see `benchmark/mining-report.json`). The manifest
+contains commit references only. `uv run python benchmark/build_benchmark.py` regenerates it
+(network plus Docker), and `witness eval` re-creates each PR locally from a mirror cache.
+
+- **Bug case.** A real upstream fix commit F with 1-3 source files, at least one test
+  file, and a message that says it fixes something (typo, docs, CI, typing, lint and
+  dependency fixes are excluded). The PR's base is F with its test changes held back, and
+  the PR's head reverts F's source files. So the PR diff is exactly "un-fix", and F's own
+  tests are hidden ground truth.
+- **Clean case.** A refactor or feature commit (1-3 source files, with tests) whose files
+  no bug fix touched in the next 50 commits ("no known bug").
+- **Every case is validated by execution before it is kept.** For a bug case, the hidden
+  tests must fail on the PR head with an assertion or exception (not an import error) and
+  pass on the fixed base. For a clean case, its tests must pass. Candidates that fail
+  validation are discarded and counted in `benchmark/mining-report.json`.
+
+### Scoring
+
+A finding is **reported** if it is VERIFIED (or, under `--no-verify`, any hypothesis). A
+reported finding is a **true positive** if either:
+
+- **behavioural** (strongest): its repro test fails on the PR head and passes on the base.
+  In a bug case the base *is* the upstream fix and the diff is exactly the revert, so this
+  ties the finding to the behaviour the fix restored. Only verified findings can match
+  this way.
+- **location**: it points into a reintroduced hunk (same file, line ranges overlapping
+  within 3 lines). This is the only rule an untested hypothesis can meet, and it is
+  generous: a wrong claim about the right lines still counts, which flatters the
+  no-verify baseline.
+
+Every finding reported on a clean PR is a false positive. **Precision** = true-positive
+findings / reported findings; **recall** = bug PRs with at least one true positive / bug
+PRs; **clean PRs flagged** = clean PRs with any reported finding. The eval also applies
+Witness's suggested fix to the PR and runs the upstream fix's own hidden tests ("fix
+passes hidden tests").
+
+Two ablations use the same model and prompts:
+
+- `--no-verify`: an independent run that reports every hypothesis, like a conventional
+  AI reviewer.
+- "all hypotheses (paired)": the verify run re-scored as if every hypothesis had been
+  reported. The hypotheses are identical, so the difference is due to verification
+  alone.
+
+```bash
+uv run witness eval --suite benchmark/manifest.json --backend claude-cli --limit 5
+uv run witness eval --suite benchmark/manifest.json --backend claude-cli --limit 5 --no-verify
+uv run witness eval-report benchmark/results/*.json --out benchmark/results/RESULTS.md
+```
+
+`--limit N` takes N bug and N clean cases, round-robin across repositories; `--cases`
+picks ids; `--concurrency` caps parallel reviews. Each run writes JSON (every case,
+finding and score) and markdown.
+
+The harness itself is tested offline: `fixtures/eval-demo/` builds a small "upstream"
+repo with two real fixes and a refactor, the real miner turns it into 2 bug cases and 1
+clean case, and replayed responses drive `witness eval` through materialization, review,
+scoring and the hidden-test fix check.
+
+### Results: a small real run (10 PRs)
+
+`claude-cli` backend (Claude Opus 5.5 through the local `claude -p`), 5 bug and 5 clean
+PRs (`--limit 5`, one per repository), `--max-candidates 3 --max-attempts 2`, concurrency 3,
+run on 2026-10-28.
+
+| Mode | PRs (bug / clean) | Reported | Precision | Recall | Clean PRs flagged | Hypotheses | Verified |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Witness (verify) | 5 / 5 | 15 | **80%** (12/15) | 100% (5/5) | **2 / 5** | 18 | 15 |
+| Same hypotheses, no verification | 5 / 5 | 18 | 67% (12/18) | 100% (5/5) | 3 / 5 | 18 | 0 |
+
+- **Cost:** 44 `claude -p` calls in total (4.4 per PR), about 162k tokens per PR. The CLI
+  reports a list-price equivalent of **$1.32 per PR**; it ran on a subscription, so
+  nothing was billed.
+- **Latency:** p50 43 s and p90 77 s per PR, including Docker image builds on the first
+  run of each dependency set.
+- **Fixes:** 9 of the 12 verified bug-case fixes made the upstream fix's own hidden
+  tests pass.
+- **No-verify row:** this is the paired ablation. The recorded hypotheses from the verify
+  run were replayed with `--no-verify`, so the hypotheses are identical and it cost no
+  extra calls. Its cost and latency are not meaningful and are left out.
+
+What the numbers say, and what they do not:
+
+- **Verification removed 3 of 18 hypotheses, all on clean PRs, and lost no true
+  positive.** On these 10 PRs that is the whole precision gain (67% to 80%) and one fewer
+  clean PR flagged. All 12 bug-case hypotheses reproduced, so recall cost nothing here.
+- **Two of the three "false positives" are verified behaviour changes in commits the
+  benchmark labelled clean.** Reading them:
+  - `humanize-clean-711df91a`: `activate(None)` now raises `AttributeError`. Upstream
+    later fixed exactly this, on exactly that line (`6fdd7ac`, "Allow
+    i18n.activate(None)"), so this is a **real bug** that the "no known bug" heuristic
+    missed. That heuristic only looks for later commits whose message says "fix".
+  - `marshmallow-clean-07c9c18d` (2 findings): `load`/`dump` gained a `context` argument
+    but `loads`/`dumps` did not, so `loads(..., context=...)` raises `TypeError`. That is
+    true at that commit, but upstream later redesigned and removed the parameter instead
+    of "fixing" it. It is scored as a false positive.
+
+  With the humanize label corrected, precision is 13/15 (87%) and 1 of 4 clean PRs is
+  flagged. The table keeps the strict, as-labelled scores.
+- **Caveats.**
+  - **Sample size:** 10 PRs, one run, one model. The confidence intervals are wide, and
+    100% recall on 5 PRs says little.
+  - **Easy bug cases:** these PRs are small, single-purpose reverts with an existing test
+    suite, easier than real-world PRs.
+  - **Duplicates:** several true positives in one PR describe the same bug in different
+    ways, which inflates the finding counts.
+  - **Generous location rule:** it can only help the no-verify row.
+  - **Capped search:** candidates and attempts were capped to keep the run small.
+
+Every model reply is saved in [`benchmark/results/recorded/`](benchmark/results/recorded/).
+Re-scoring or re-running the analysis is free and offline:
+`witness eval --backend replay --fixtures benchmark/results/recorded --limit 5`. The full
+per-case and per-finding results are in [`benchmark/results/`](benchmark/results/).
+
 ## Development
 
 ```bash
+docker compose up -d              # Postgres for the App tests (port 5449)
 uv run ruff check . && uv run ruff format --check .
 uv run mypy                       # strict, src and tests
 uv run pytest                     # everything; needs Docker for the integration tests
-uv run pytest -m "not integration"
+uv run pytest -m "not integration and not postgres"
 ```
 
-Tests never call a real LLM. The unit tests drive the prove loop with the replay backend
-and a scripted sandbox; the integration tests use real Docker for the sandbox's isolation
-properties (uid, read-only mounts, no network, timeout kill), the vitest runner, and the
-full demo review, including its trace tree.
+Tests never call a real LLM or GitHub. The unit tests drive the prove loop with the replay
+backend and a scripted sandbox. The integration tests use real Docker for the sandbox's
+isolation properties (uid, read-only mounts, no network, timeout kill), the vitest
+runner, the full demo review including its trace tree, and the offline eval. The App
+tests use a fresh Postgres schema per test (dedupe, the job lifecycle, `SKIP LOCKED`
+under 5 concurrent workers, lease reclaim) and respx-mocked GitHub, asserting the exact
+review payload and the check-run lifecycle.
 
 ## Layout
 
@@ -234,5 +435,12 @@ src/witness/
   sandbox/          Docker sandbox, cached dependency images, pytest and vitest runners
   report/           Reporter protocol, terminal and JSON reporters
   tracing.py        optional Tracewright spans
+  app/              GitHub App: webhook, signature, Postgres store/queue, worker,
+                    githubkit gateway, review/check-run rendering, manifest registration
+  eval/             benchmark manifest, miner, PR materialization, runner, scoring, report
+benchmark/          build_benchmark.py, manifest.json, mining-report.json, results/
 fixtures/demo-repo/ base/ and head/ trees, the history builder, recorded responses
+fixtures/eval-demo/ offline mini-benchmark builder and replayed responses
+scripts/            register_github_app.py (manifest flow)
+github-app-manifest.json, docker-compose.yml
 ```

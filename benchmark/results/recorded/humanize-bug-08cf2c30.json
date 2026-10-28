@@ -1,0 +1,133 @@
+{
+  "model": "claude-opus-5-5",
+  "responses": {
+    "hypothesize": {
+      "candidates": [
+        {
+          "id": "C1",
+          "claim": "The new guard requires a nonzero whole_number, so a zero input no longer takes the integer path. It falls through to the pure-fraction branch and returns the degenerate '0/1' instead of '0'.",
+          "file": "src/humanize/number.py",
+          "line_start": 364,
+          "line_end": 370,
+          "trigger": "fractional(0) (also fractional(0.0) or fractional('0')) returns '0/1'; expected '0'",
+          "severity": "medium",
+          "confidence": 0.9
+        },
+        {
+          "id": "C2",
+          "claim": "When limit_denominator rounds the fractional part up to 1/1, the numerator is 1, so the integer-fold path is skipped. The result is an unreduced mixed fraction like '2 1/1' instead of '3'.",
+          "file": "src/humanize/number.py",
+          "line_start": 364,
+          "line_end": 377,
+          "trigger": "fractional(2.9999999) returns '2 1/1'; expected '3'",
+          "severity": "medium",
+          "confidence": 0.88
+        },
+        {
+          "id": "C3",
+          "claim": "A value just below 1 has whole_number 0 and its fractional part rounds to 1/1. It now returns '1/1' instead of '1'.",
+          "file": "src/humanize/number.py",
+          "line_start": 364,
+          "line_end": 370,
+          "trigger": "fractional(0.9999999) returns '1/1'; expected '1'",
+          "severity": "low",
+          "confidence": 0.85
+        }
+      ]
+    },
+    "prove/C1/attempt-1": {
+      "reasoning": "On HEAD the integer short-circuit needs `whole_number` to be truthy. For input 0, `whole_number` is 0 and `frac` is `Fraction(0)`, so numerator is 0 and denominator is 1. The guard is skipped and the `not whole_number` branch returns '0/1'. BASE folded any denominator==1 result into the integer part and returned '0'.",
+      "concede": false,
+      "test_code": "from humanize.number import fractional\n\n\ndef test_fractional_zero_is_whole_number():\n    assert fractional(0) == \"0\"\n",
+      "expected_failure": {
+        "kind": "assertion",
+        "exception_type": null
+      }
+    },
+    "fix/C1": {
+      "explanation": "The new guard only takes the integer path when whole_number is nonzero and numerator is zero. A zero input (whole_number 0, frac 0/1) therefore falls through to the pure-fraction branch and prints '0/1'. The fix brings back the earlier check: whenever the reduced fractional part has denominator 1, add the numerator into the whole part and return an integer string. This gives '0' for 0, keeps '1' for 1.0, and also avoids outputs like '2 1/1' when the fraction rounds up to 1. All other cases behave as before.",
+      "edits": [
+        {
+          "file": "src/humanize/number.py",
+          "find": "    if whole_number and not numerator and denominator == 1:\n        # this means that an integer was passed in\n        # (or variants of that integer like 1.0000)\n        return f\"{whole_number:.0f}\"",
+          "replace": "    if denominator == 1:\n        # The fractional part reduced to a whole number: either an integer\n        # was passed in (e.g. 0, 1 or 1.0000, giving 0/1), or the fractional\n        # part rounded up to 1/1 (e.g. 2.9999999). Fold it into the integer\n        # part instead of emitting a degenerate \"0/1\" or \"2 1/1\".\n        return f\"{whole_number + numerator:.0f}\""
+        }
+      ]
+    },
+    "prove/C2/attempt-1": {
+      "reasoning": "On HEAD, fractional(2.9999999) gives whole_number=2. The fractional part 0.9999999, after limit_denominator(1000), becomes Fraction(1, 1), so numerator=1. The new guard `whole_number and not numerator and denominator == 1` is false, so execution falls through to the mixed-fraction return and produces the degenerate '2 1/1'. BASE folded any denominator==1 result into the integer part and returned '3'. The test asserts '3', so it fails on HEAD with an assertion error.",
+      "concede": false,
+      "test_code": "from humanize.number import fractional\n\n\ndef test_fractional_rounds_up_to_next_integer():\n    assert fractional(2.9999999) == \"3\"\n",
+      "expected_failure": {
+        "kind": "assertion",
+        "exception_type": null
+      }
+    },
+    "fix/C2": {
+      "explanation": "limit_denominator can round the fractional part up to a whole unit (numerator \u00b11, denominator 1), for example 2.9999999 becomes 2 + 1/1. The old guard required numerator == 0, so this case fell through and printed '2 1/1'. The fix folds the fractional part into the integer whenever the denominator is 1, so 2.9999999 now returns '3'. Exact integers like 1 or 1.0000 still return the integer as before. A pure zero input still returns '0/1', so that behaviour is unchanged.",
+      "edits": [
+        {
+          "file": "src/humanize/number.py",
+          "find": "    if whole_number and not numerator and denominator == 1:\n        # this means that an integer was passed in\n        # (or variants of that integer like 1.0000)\n        return f\"{whole_number:.0f}\"",
+          "replace": "    if denominator == 1 and (whole_number or numerator):\n        # Either an integer was passed in (e.g. 1 or 1.0000, giving 0/1), or\n        # the fractional part rounded up to a whole unit (e.g. 2.9999999\n        # giving 1/1). Fold it into the integer part.\n        return f\"{whole_number + numerator:.0f}\""
+        }
+      ]
+    },
+    "prove/C3/attempt-1": {
+      "reasoning": "For 0.9999999, int() gives whole_number=0, and Fraction(0.9999999).limit_denominator(1000) reduces to 1/1. On HEAD the integer short-circuit requires whole_number to be truthy, so it is skipped. The `not whole_number` branch then returns '1/1'. BASE folded denominator==1 into the whole part and returned '1'.",
+      "concede": false,
+      "test_code": "from humanize.number import fractional\n\n\ndef test_fractional_just_below_one_folds_to_whole():\n    assert fractional(0.9999999) == \"1\"\n",
+      "expected_failure": {
+        "kind": "assertion",
+        "exception_type": null
+      }
+    },
+    "fix/C3": {
+      "explanation": "When the fractional part rounds to a whole number (denominator == 1), fold the numerator into the integer part. Previously this only happened when the whole part was nonzero and the numerator was 0, so 0.9999999 printed '1/1' and 2.9999999 printed '2 1/1'. Input 0 still returns '0/1' as before, so that behaviour is unchanged.",
+      "edits": [
+        {
+          "file": "src/humanize/number.py",
+          "find": "    if whole_number and not numerator and denominator == 1:\n        # this means that an integer was passed in\n        # (or variants of that integer like 1.0000)\n        return f\"{whole_number:.0f}\"",
+          "replace": "    if denominator == 1 and (whole_number or numerator):\n        # The fractional part reduced to a whole number: either an integer\n        # was passed in (e.g. 1 or 1.0000), or the fractional part rounded\n        # to +/-1 (e.g. 0.9999999 or 2.9999999). Fold it into the integer part.\n        return f\"{whole_number + numerator:.0f}\""
+        }
+      ]
+    }
+  },
+  "usage": {
+    "hypothesize": {
+      "input_tokens": 12753,
+      "output_tokens": 595,
+      "cost_usd": 0.113916
+    },
+    "prove/C1/attempt-1": {
+      "input_tokens": 13005,
+      "output_tokens": 323,
+      "cost_usd": 0.110492
+    },
+    "fix/C1": {
+      "input_tokens": 12728,
+      "output_tokens": 632,
+      "cost_usd": 0.11445599999999999
+    },
+    "prove/C2/attempt-1": {
+      "input_tokens": 13002,
+      "output_tokens": 403,
+      "cost_usd": 0.112068
+    },
+    "fix/C2": {
+      "input_tokens": 12740,
+      "output_tokens": 768,
+      "cost_usd": 0.11727199999999999
+    },
+    "prove/C3/attempt-1": {
+      "input_tokens": 12971,
+      "output_tokens": 326,
+      "cost_usd": 0.11028
+    },
+    "fix/C3": {
+      "input_tokens": 12709,
+      "output_tokens": 792,
+      "cost_usd": 0.117504
+    }
+  }
+}

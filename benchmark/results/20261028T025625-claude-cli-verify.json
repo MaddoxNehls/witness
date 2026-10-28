@@ -1,0 +1,385 @@
+{
+  "created_at": "2026-10-28T02:56:25+00:00",
+  "suite": "benchmark\\manifest.json",
+  "backend": "claude-cli",
+  "model": "claude-opus-5-5",
+  "mode": "verify",
+  "metrics": [
+    {
+      "label": "Witness (verify)",
+      "bug_cases": 5,
+      "clean_cases": 5,
+      "errors": 0,
+      "reported": 15,
+      "true_positives": 12,
+      "precision": 0.8,
+      "recall": 1.0,
+      "clean_flagged": 2,
+      "false_alarm_rate": 0.4,
+      "hypotheses": 18,
+      "verified": 15,
+      "fixes_resolving_hidden_tests": 9,
+      "cost_per_pr_usd": 1.3232156,
+      "tokens_per_pr": 161651.7,
+      "latency_p50_s": 42.754999999999995,
+      "latency_p90_s": 77.12
+    },
+    {
+      "label": "same run, all hypotheses (paired)",
+      "bug_cases": 5,
+      "clean_cases": 5,
+      "errors": 0,
+      "reported": 18,
+      "true_positives": 12,
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "clean_flagged": 3,
+      "false_alarm_rate": 0.6,
+      "hypotheses": 18,
+      "verified": 15,
+      "fixes_resolving_hidden_tests": 9,
+      "cost_per_pr_usd": 1.3232156,
+      "tokens_per_pr": 161651.7,
+      "latency_p50_s": 42.754999999999995,
+      "latency_p90_s": 77.12
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "humanize-bug-08cf2c30",
+      "kind": "bug",
+      "findings": [
+        {
+          "id": "C1",
+          "status": "verified",
+          "file": "src/humanize/number.py",
+          "lines": "364-370",
+          "claim": "The new guard requires a nonzero whole_number, so a zero input no longer takes the integer path. It falls through to the pure-fraction branch and returns the degenerate '0/1' instead of '0'.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": true
+        },
+        {
+          "id": "C2",
+          "status": "verified",
+          "file": "src/humanize/number.py",
+          "lines": "364-377",
+          "claim": "When limit_denominator rounds the fractional part up to 1/1, the numerator is 1, so the integer-fold path is skipped. The result is an unreduced mixed fraction like '2 1/1' instead of '3'.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": false
+        },
+        {
+          "id": "C3",
+          "status": "verified",
+          "file": "src/humanize/number.py",
+          "lines": "364-370",
+          "claim": "A value just below 1 has whole_number 0 and its fractional part rounds to 1/1. It now returns '1/1' instead of '1'.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": false
+        }
+      ],
+      "hypotheses": 3,
+      "verified": 3,
+      "cost_usd": 0.7959879999999999,
+      "input_tokens": 89908,
+      "output_tokens": 3839,
+      "llm_calls": 7,
+      "duration_s": 61.58,
+      "error": null
+    },
+    {
+      "case_id": "marshmallow-bug-070dde08",
+      "kind": "bug",
+      "findings": [
+        {
+          "id": "C1",
+          "status": "verified",
+          "file": "src/marshmallow/fields.py",
+          "lines": "2076-2079",
+          "claim": "The constant is now passed as `load_default` to `Field.__init__`, which raises ValueError when `required=True` and `load_default` is not missing. `Constant(..., required=True)` used to construct fine but now raises at construction. The old code set `load_default` only after `super().__init__` and overrode `_validate_missing` so a missing value never raised 'required'.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": true
+        },
+        {
+          "id": "C2",
+          "status": "verified",
+          "file": "src/marshmallow/fields.py",
+          "lines": "2076-2080",
+          "claim": "Removing the `_validate_missing` override changes schema loading for required Constant fields. A schema with `fields.Constant(42, required=True)` used to load `{}` to `{'x': 42}`; now the schema class cannot even be defined.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": true
+        }
+      ],
+      "hypotheses": 2,
+      "verified": 2,
+      "cost_usd": 1.646556,
+      "input_tokens": 198162,
+      "output_tokens": 3065,
+      "llm_calls": 5,
+      "duration_s": 43.44,
+      "error": null
+    },
+    {
+      "case_id": "more-itertools-bug-073d2342",
+      "kind": "bug",
+      "findings": [
+        {
+          "id": "C1",
+          "status": "verified",
+          "file": "more_itertools/more.py",
+          "lines": "4201-4210",
+          "claim": "nth_product now repeats the iterable objects before converting them to tuples. A one-shot iterator is exhausted after the first tuple(), so the remaining repeated pools are empty. The product size then becomes 0 and valid indexes raise IndexError.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": false
+        },
+        {
+          "id": "C2",
+          "status": "verified",
+          "file": "more_itertools/more.py",
+          "lines": "4365-4371",
+          "claim": "product_index repeats iterable objects before materializing them, so a one-shot iterator produces empty pools after the first repetition. pool.index then raises ValueError for valid elements.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": true
+        }
+      ],
+      "hypotheses": 2,
+      "verified": 2,
+      "cost_usd": 3.7612360000000002,
+      "input_tokens": 464322,
+      "output_tokens": 2335,
+      "llm_calls": 5,
+      "duration_s": 45.0,
+      "error": null
+    },
+    {
+      "case_id": "pathe-bug-4bcf68fd",
+      "kind": "bug",
+      "findings": [
+        {
+          "id": "C1",
+          "status": "verified",
+          "file": "src/path.ts",
+          "lines": "272-272",
+          "claim": "parse() now uses the first path segment as root. For relative paths this returns a directory name instead of an empty root, so the root is wrong.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": true
+        },
+        {
+          "id": "C2",
+          "status": "verified",
+          "file": "src/path.ts",
+          "lines": "272-272",
+          "claim": "Windows drive roots lose their trailing slash. The old regex gave 'C:/' but splitting on '/' yields only 'C:'.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": true
+        },
+        {
+          "id": "C3",
+          "status": "verified",
+          "file": "src/path.ts",
+          "lines": "272-272",
+          "claim": "For a bare filename or an empty path, the root falls back incorrectly. A filename becomes its own root, and an empty string gives '/', where the root should be ''.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": true
+        }
+      ],
+      "hypotheses": 3,
+      "verified": 3,
+      "cost_usd": 0.428828,
+      "input_tokens": 45803,
+      "output_tokens": 3123,
+      "llm_calls": 7,
+      "duration_s": 48.44,
+      "error": null
+    },
+    {
+      "case_id": "sqlparse-bug-111b35cf",
+      "kind": "bug",
+      "findings": [
+        {
+          "id": "C1",
+          "status": "verified",
+          "file": "sqlparse/engine/grouping.py",
+          "lines": "384-387",
+          "claim": "The AS check in group_functions is now case-sensitive. A lowercase or mixed-case `as` in a CREATE TABLE ... AS SELECT statement leaves has_as False, so the function returns early and no function calls in the statement get grouped into sql.Function.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": true
+        },
+        {
+          "id": "C2",
+          "status": "verified",
+          "file": "sqlparse/engine/grouping.py",
+          "lines": "384-385",
+          "claim": "Mixed-case `As` in CREATE TABLE ... As SELECT also skips function grouping, which breaks identifier extraction (for example get_real_name) for the function call.",
+          "reported": true,
+          "location_match": true,
+          "behavioural_match": true,
+          "fix_resolves_hidden_tests": true
+        }
+      ],
+      "hypotheses": 2,
+      "verified": 2,
+      "cost_usd": 0.542384,
+      "input_tokens": 61058,
+      "output_tokens": 2698,
+      "llm_calls": 5,
+      "duration_s": 42.07,
+      "error": null
+    },
+    {
+      "case_id": "humanize-clean-711df91a",
+      "kind": "clean",
+      "findings": [
+        {
+          "id": "C1",
+          "status": "verified",
+          "file": "src/humanize/i18n.py",
+          "lines": "74-76",
+          "claim": "`activate` now calls `locale.startswith(\"en_\")` before anything else, so `activate(None)` raises AttributeError. Before this change, `activate(None)` worked: `None` is a key in `_TRANSLATIONS`, so it reset to the default NullTranslations. The test that exercised `activate(None)` was deleted rather than fixed.",
+          "reported": true,
+          "location_match": false,
+          "behavioural_match": false,
+          "fix_resolves_hidden_tests": null
+        }
+      ],
+      "hypotheses": 1,
+      "verified": 1,
+      "cost_usd": 0.293168,
+      "input_tokens": 33234,
+      "output_tokens": 1366,
+      "llm_calls": 3,
+      "duration_s": 23.75,
+      "error": null
+    },
+    {
+      "case_id": "marshmallow-clean-07c9c18d",
+      "kind": "clean",
+      "findings": [
+        {
+          "id": "C1",
+          "status": "verified",
+          "file": "src/marshmallow/schema.py",
+          "lines": "726-756",
+          "claim": "`load` gained a `context` parameter, but `loads` was not updated to accept or forward it. A `context` kwarg falls into `**kwargs` and goes to `render_module.loads` (json.loads), which raises TypeError instead of applying the context.",
+          "reported": true,
+          "location_match": false,
+          "behavioural_match": false,
+          "fix_resolves_hidden_tests": null
+        },
+        {
+          "id": "C2",
+          "status": "verified",
+          "file": "src/marshmallow/schema.py",
+          "lines": "557-572",
+          "claim": "`dump` gained a `context` parameter, but `dumps` neither accepts nor forwards it. A `context` kwarg is passed through `**kwargs` to `json.dumps`, which fails with TypeError, so the context is never applied during serialization.",
+          "reported": true,
+          "location_match": false,
+          "behavioural_match": false,
+          "fix_resolves_hidden_tests": null
+        },
+        {
+          "id": "C3",
+          "status": "unverified",
+          "file": "src/marshmallow/schema.py",
+          "lines": "778-806",
+          "claim": "`validate` runs `_do_load` without accepting a `context` and without setting CONTEXT. Context-dependent field deserialization or validation therefore gives different results under `validate` than under `load(..., context=...)`, and passing `context=` raises TypeError.",
+          "reported": false,
+          "location_match": false,
+          "behavioural_match": false,
+          "fix_resolves_hidden_tests": null
+        }
+      ],
+      "hypotheses": 3,
+      "verified": 2,
+      "cost_usd": 4.445076,
+      "input_tokens": 542539,
+      "output_tokens": 5241,
+      "llm_calls": 7,
+      "duration_s": 77.12,
+      "error": null
+    },
+    {
+      "case_id": "more-itertools-clean-1f301094",
+      "kind": "clean",
+      "findings": [
+        {
+          "id": "C1",
+          "status": "unverified",
+          "file": "more_itertools/recipes.py",
+          "lines": "917-925",
+          "claim": "reshape silently emits a short final row when the element count is not divisible by cols, so the result is not a valid matrix. transpose uses strict zipping and would reject such dimensions instead.",
+          "reported": false,
+          "location_match": false,
+          "behavioural_match": false,
+          "fix_resolves_hidden_tests": null
+        },
+        {
+          "id": "C2",
+          "status": "unverified",
+          "file": "more_itertools/recipes.py",
+          "lines": "998-1009",
+          "claim": "totient(0) returns 0 instead of raising, and a negative n raises an unhelpful ValueError from math.isqrt. Invalid input is not validated.",
+          "reported": false,
+          "location_match": false,
+          "behavioural_match": false,
+          "fix_resolves_hidden_tests": null
+        }
+      ],
+      "hypotheses": 2,
+      "verified": 0,
+      "cost_usd": 1.0816720000000002,
+      "input_tokens": 128717,
+      "output_tokens": 2598,
+      "llm_calls": 3,
+      "duration_s": 33.61,
+      "error": null
+    },
+    {
+      "case_id": "sqlparse-clean-8238a9e4",
+      "kind": "clean",
+      "findings": [],
+      "hypotheses": 0,
+      "verified": 0,
+      "cost_usd": 0.187056,
+      "input_tokens": 21983,
+      "output_tokens": 560,
+      "llm_calls": 1,
+      "duration_s": 7.48,
+      "error": null
+    },
+    {
+      "case_id": "std-env-clean-0766ba3f",
+      "kind": "clean",
+      "findings": [],
+      "hypotheses": 0,
+      "verified": 0,
+      "cost_usd": 0.050192,
+      "input_tokens": 5760,
+      "output_tokens": 206,
+      "llm_calls": 1,
+      "duration_s": 3.85,
+      "error": null
+    }
+  ]
+}

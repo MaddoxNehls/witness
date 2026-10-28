@@ -98,6 +98,21 @@ def parse_hunks(unified_zero_diff: str) -> dict[str, list[LineRange]]:
     return result
 
 
+def visible_lines(repo: Path, base: str, head: str) -> dict[str, list[LineRange]]:
+    """HEAD line ranges a PR diff displays (hunks plus GitHub's 3 lines of context).
+
+    Review comments can only be attached to these lines.
+    """
+    return parse_hunks(diff(repo, base, head, context_lines=3))
+
+
+def show_file(repo: Path, rev: str, path: str) -> str | None:
+    try:
+        return _git(repo, "show", f"{rev}:{path}")
+    except GitError:
+        return None
+
+
 def list_files(repo: Path, rev: str) -> list[str]:
     return _git(repo, "ls-tree", "-r", "--name-only", rev).splitlines()
 

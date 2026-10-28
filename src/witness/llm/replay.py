@@ -32,6 +32,7 @@ class ReplayBackend:
         data = fixture if isinstance(fixture, dict) else _load(fixture)
         self.model = str(data.get("model", "replay"))
         self._responses: dict[str, Any] = dict(data.get("responses", {}))
+        self._usage: dict[str, Any] = dict(data.get("usage", {}))
         self.served: list[str] = []
 
     def complete(self, request: CompletionRequest) -> Completion:
@@ -39,30 +40,55 @@ class ReplayBackend:
             known = ", ".join(sorted(self._responses)) or "none"
             raise BackendError(f"no recorded response for {request.tag!r} (have: {known})")
         self.served.append(request.tag)
-        value = self._responses[request.tag]
-        text = value if isinstance(value, str) else json.dumps(value)
-        return Completion(text=text, model=self.model)
+        return _replayed(self._responses[request.tag], self._usage.get(request.tag), self.model)
 
 
 class RecordingBackend:
-    """Wrap a live backend and save every reply to ``path`` in replay-fixture format."""
+    """Cache-through wrapper: serve replies already saved at ``path``, call the live
+    backend for the rest, and save each new reply (with its usage) immediately.
+
+    The file is a replay fixture, so a recorded run can be replayed offline, and an
+    interrupted run resumes without paying for any call twice.
+    """
 
     def __init__(self, inner: Backend, path: Path) -> None:
         self._inner = inner
         self._path = path
         self.name = inner.name
         self.model = inner.model
-        self._responses: dict[str, Any] = {}
+        cached = _load(path) if path.exists() else {}
+        self._responses: dict[str, Any] = dict(cached.get("responses", {}))
+        self._usage: dict[str, Any] = dict(cached.get("usage", {}))
+        self.live_calls = 0
 
     def complete(self, request: CompletionRequest) -> Completion:
+        if request.tag in self._responses:
+            return _replayed(self._responses[request.tag], self._usage.get(request.tag), self.model)
         completion = self._inner.complete(request)
+        self.live_calls += 1
         try:
             self._responses[request.tag] = json.loads(completion.text)
         except json.JSONDecodeError:
             self._responses[request.tag] = completion.text
-        document = {"model": completion.model, "responses": self._responses}
+        self._usage[request.tag] = {
+            "input_tokens": completion.input_tokens,
+            "output_tokens": completion.output_tokens,
+            "cost_usd": completion.cost_usd,
+        }
+        document = {"model": completion.model, "responses": self._responses, "usage": self._usage}
         self._path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
         return completion
+
+
+def _replayed(value: Any, usage: dict[str, Any] | None, model: str) -> Completion:
+    usage = usage or {}
+    return Completion(
+        text=value if isinstance(value, str) else json.dumps(value),
+        model=model,
+        input_tokens=int(usage.get("input_tokens") or 0),
+        output_tokens=int(usage.get("output_tokens") or 0),
+        cost_usd=usage.get("cost_usd"),
+    )
 
 
 def _load(path: Path) -> dict[str, Any]:

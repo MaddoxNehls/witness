@@ -14,6 +14,10 @@ dependencies = [
     "rich>=13.9",
     "tree-sitter>=0.25",
     "tree-sitter-language-pack>=0.9",
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "githubkit[auth-app]>=0.13",
+    "psycopg[binary]>=3.2",
 ]
 
 [project.optional-dependencies]
@@ -29,6 +33,8 @@ dev = [
     "mypy>=1.13",
     "types-pyyaml>=6.0",
     "types-docker>=7.1",
+    "respx>=0.22",
+    "httpx>=0.28",
 ]
 
 [tool.uv.sources]
@@ -44,7 +50,10 @@ packages = ["src/witness"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
-markers = ["integration: needs a running Docker daemon (deselect with -m 'not integration')"]
+markers = [
+    "integration: needs a running Docker daemon (deselect with -m 'not integration')",
+    "postgres: needs the docker compose Postgres on port 5449",
+]
 
 [tool.ruff]
 line-length = 100

@@ -12,3 +12,6 @@ dist/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+.env.github-app
+*.pem
+.cache/

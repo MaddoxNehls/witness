@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import shlex
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -15,6 +16,23 @@ from typing import Protocol
 from witness.project import Project, ProjectError, python_requirements
 
 JUNIT_PATH = "/tmp/witness-junit.xml"  # inside the container, on a tmpfs
+
+# hatch-vcs and setuptools-scm generate a version module at build time; the project is
+# never built here, so write a stub wherever pyproject.toml says that module lives.
+STUB_VERSION_FILES = """\
+python - <<'PY'
+import pathlib, tomllib
+p = pathlib.Path("pyproject.toml")
+tool = tomllib.loads(p.read_text()).get("tool", {}) if p.exists() else {}
+scm = tool.get("setuptools_scm", {})
+vcs = tool.get("hatch", {}).get("build", {}).get("hooks", {}).get("vcs", {})
+for name in filter(None, (vcs.get("version-file"), scm.get("version_file"), scm.get("write_to"))):
+    path = pathlib.Path(name)
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('__version__ = version = "0.0.0"\\n'
+                        '__version_tuple__ = version_tuple = (0, 0, 0)\\n')
+PY"""
 SANDBOX_UID = 10001  # no passwd entry needed; HOME points at the tmpfs
 
 
@@ -33,7 +51,9 @@ class Runner(Protocol):
 
     def setup_command(self) -> str: ...
 
-    def test_command(self) -> str: ...
+    def test_command(self, targets: Sequence[str]) -> str:
+        """Shell command running the given repo-relative test files, writing JUnit XML."""
+        ...
 
 
 @dataclass(frozen=True)
@@ -50,16 +70,16 @@ FROM {self.python_image}
 COPY requirements.txt /deps/requirements.txt
 RUN pip install --no-cache-dir --disable-pip-version-check --prefer-binary \\
         -r /deps/requirements.txt
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/work/src:/work HOME=/tmp
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/work/src:/work HOME=/tmp NO_COLOR=1
 """
         return {"Dockerfile": dockerfile.encode(), "requirements.txt": requirements.encode()}
 
     def setup_command(self) -> str:
-        return "true"
+        return STUB_VERSION_FILES
 
-    def test_command(self) -> str:
-        flags = f"-p no:cacheprovider -q --tb=long --junitxml={JUNIT_PATH}"
-        return f"{self.base_command} {flags} {shlex.quote(self.repro_path)}"
+    def test_command(self, targets: Sequence[str]) -> str:
+        flags = f"-p no:cacheprovider -q --color=no --tb=long --junitxml={JUNIT_PATH}"
+        return f"{self.base_command} {flags} {_quote(targets)}"
 
 
 @dataclass(frozen=True)
@@ -83,16 +103,20 @@ WORKDIR /deps
 COPY package*.json /deps/
 RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts --no-audit --no-fund; \\
     else npm install --ignore-scripts --no-audit --no-fund; fi
-ENV HOME=/tmp CI=1
+ENV HOME=/tmp CI=1 NO_COLOR=1
 """
         return {"Dockerfile": dockerfile.encode(), **files}
 
     def setup_command(self) -> str:
         return "[ -e node_modules ] || ln -s /deps/node_modules node_modules"
 
-    def test_command(self) -> str:
+    def test_command(self, targets: Sequence[str]) -> str:
         flags = f"--reporter=default --reporter=junit --outputFile.junit={JUNIT_PATH}"
-        return f"{self.base_command} {shlex.quote(self.repro_path)} {flags}"
+        return f"{self.base_command} {_quote(targets)} {flags}"
+
+
+def _quote(targets: Sequence[str]) -> str:
+    return " ".join(shlex.quote(target) for target in targets)
 
 
 def runner_for(project: Project) -> Runner:

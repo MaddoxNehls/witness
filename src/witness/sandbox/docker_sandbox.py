@@ -22,7 +22,9 @@ import hashlib
 import secrets
 import shutil
 import tempfile
+import threading
 import time
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -37,6 +39,7 @@ from witness.sandbox.runners import JUNIT_PATH, SANDBOX_UID, Runner
 
 IMAGE_REPO = "witness-sandbox"
 LABEL = "dev.witness.sandbox"
+_build_locks: defaultdict[str, threading.Lock] = defaultdict(threading.Lock)
 
 
 @dataclass(frozen=True)
@@ -87,30 +90,42 @@ class DockerSandbox:
         return self.runner.repro_path
 
     def run(self, tree: Path, test_code: str, *, label: str = "run") -> ExecResult:
+        """Run ``test_code`` as the repro file against ``tree``."""
+        return self._exec(tree, [self.runner.repro_path], test_code, label)
+
+    def run_tests(self, tree: Path, paths: list[str], *, label: str = "tests") -> ExecResult:
+        """Run test files that already exist in ``tree`` (e.g. a benchmark's hidden tests)."""
+        return self._exec(tree, paths, None, label)
+
+    def _exec(
+        self, tree: Path, targets: list[str], test_code: str | None, label: str
+    ) -> ExecResult:
         with (
             tracing.span(
                 f"sandbox exec {label}",
                 kind="tool",
-                input={"tree": label, "test_code": test_code},
+                input={"tree": label, "targets": targets, "test_code": test_code},
                 attributes={"gen_ai.tool.name": "sandbox", "witness.image": self.image},
             ) as span,
             tempfile.TemporaryDirectory(prefix="witness-test-") as test_dir,
         ):
-            (Path(test_dir) / "repro").write_text(test_code, encoding="utf-8")
-            result = self._run(tree, Path(test_dir))
+            if test_code is not None:
+                (Path(test_dir) / "repro").write_text(test_code, encoding="utf-8")
+            script = self._script(secrets.token_hex(8), targets, with_repro=test_code is not None)
+            result = self._run(tree, Path(test_dir), script)
             span.set_attributes(
                 {"witness.exit_code": result.exit_code, "witness.timed_out": result.timed_out}
             )
             span.set_output(result.output[-2000:])
             return result
 
-    def _run(self, tree: Path, test_dir: Path) -> ExecResult:
-        nonce = secrets.token_hex(8)
+    def _run(self, tree: Path, test_dir: Path, script: tuple[str, str]) -> ExecResult:
+        nonce, command = script
         started = time.monotonic()
         try:
             container = self._client.containers.create(
                 self.image,
-                command=["sh", "-c", self._script(nonce)],
+                command=["sh", "-c", command],
                 user=f"{SANDBOX_UID}:{SANDBOX_UID}",
                 working_dir="/work",
                 network_mode="none",
@@ -158,25 +173,27 @@ class DockerSandbox:
             duration_s=round(time.monotonic() - started, 2),
         )
 
-    def _script(self, nonce: str) -> str:
+    def _script(self, nonce: str, targets: list[str], *, with_repro: bool) -> tuple[str, str]:
         repro = self.runner.repro_path
-        return "\n".join(
-            [
-                "set -u",
-                "cp -R /repo/. /work/",
-                f"mkdir -p \"$(dirname '/work/{repro}')\"",
-                f"cp /witness/repro '/work/{repro}'",
-                "cd /work",
-                self.runner.setup_command(),
-                f"{{ {self.runner.test_command()}; echo $? > /tmp/witness-rc; }} 2>&1"
-                f" | head -c {self._limits.output_bytes}",
-                # A per-run random marker separates runner output from the report, so
-                # test output can't collide with the boundary by accident.
-                f"echo; echo '{nonce}'",
-                f"cat {JUNIT_PATH} 2>/dev/null",
-                'exit "$(cat /tmp/witness-rc 2>/dev/null || echo 125)"',
-            ]
-        )
+        place_repro = [
+            f"mkdir -p \"$(dirname '/work/{repro}')\"",
+            f"cp /witness/repro '/work/{repro}'",
+        ]
+        lines = [
+            "set -u",
+            "cp -R /repo/. /work/",
+            *(place_repro if with_repro else []),
+            "cd /work",
+            self.runner.setup_command(),
+            f"{{ {self.runner.test_command(targets)}; echo $? > /tmp/witness-rc; }} 2>&1"
+            f" | head -c {self._limits.output_bytes}",
+            # A per-run random marker separates runner output from the report, so
+            # test output can't collide with the boundary by accident.
+            f"echo; echo '{nonce}'",
+            f"cat {JUNIT_PATH} 2>/dev/null",
+            'exit "$(cat /tmp/witness-rc 2>/dev/null || echo 125)"',
+        ]
+        return nonce, "\n".join(lines)
 
 
 def connect() -> docker.DockerClient:
@@ -208,11 +225,21 @@ def ensure_image(client: docker.DockerClient, runner: Runner, head_tree: Path) -
     """
     context = runner.build_context(head_tree)
     tag = image_tag(runner, context)
+    with _build_locks[tag]:  # concurrent reviews (eval, workers) build each image once
+        if not _image_exists(client, tag):
+            _build(client, tag, context)
+    return tag
+
+
+def _image_exists(client: docker.DockerClient, tag: str) -> bool:
     try:
         client.images.get(tag)
-        return tag
     except docker.errors.ImageNotFound:
-        pass
+        return False
+    return True
+
+
+def _build(client: docker.DockerClient, tag: str, context: dict[str, bytes]) -> None:
     with tracing.span("sandbox image build", kind="tool", attributes={"witness.image": tag}):
         build_dir = Path(tempfile.mkdtemp(prefix="witness-build-"))
         try:
@@ -226,7 +253,6 @@ def ensure_image(client: docker.DockerClient, runner: Runner, head_tree: Path) -
             raise SandboxError(f"dependency image build failed: {exc}\n{log[-2000:]}") from exc
         finally:
             shutil.rmtree(build_dir, ignore_errors=True)
-    return tag
 
 
 def _iter(log: Any) -> list[dict[str, Any]]:
