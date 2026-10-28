@@ -29,7 +29,13 @@ has the caveats and the raw recordings.
 ## What it looks like
 
 The repo ships a small invoicing project whose HEAD commit introduces two real bugs and
-one harmless refactor. With recorded model responses the whole pipeline runs offline:
+one harmless refactor. With recorded model responses the whole pipeline runs offline,
+including the Docker sandbox. Two bugs are proven, each with a repro test and a fix
+verified in the sandbox; the third hypothesis is rejected because its repro passed:
+
+![witness review on the demo repo: 2 verified findings with repro tests and verified fixes, 1 rejected hypothesis](docs/demo.svg)
+
+<sub>Rendered from a real run by `scripts/render_demo_svg.py`. The same output as text:</sub>
 
 ```text
 $ witness review --repo .demo/demo-repo --base main --head float-discounts \
